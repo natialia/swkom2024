@@ -8,6 +8,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5028:8080"  # Mapping von Host-Port 5028 zu Container-Port 8080
+      - "8081:8081"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     restart: always
