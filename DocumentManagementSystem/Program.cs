@@ -30,8 +30,6 @@ namespace DocumentManagementSystem
 
             app.MapControllers();
 
-            app.Urls.Add("http://localhost:8081");
-
             app.Run();
         }
     }
