@@ -1,0 +1,13 @@
+﻿version: '3.8'
+
+services:
+  dms-api:
+    image: dms-api-image
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5028:8080"  # Mapping von Host-Port 5028 zu Container-Port 8080
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    restart: always
