@@ -17,13 +17,7 @@ namespace DocumentManagementSystem.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Document>> GetDocument(long id)
         {
-            /*var document = await findasync..
-            if (document == null)
-            {
-                return NotFound();
-            }
-            ocument = FIndAsync(name)*/
-            return new Document(id);
+            return Ok("Document was found");
         }
 
         [HttpPost]
