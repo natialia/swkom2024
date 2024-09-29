@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo List</title>
+    <title>Paperless</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>Todo List</h1>
+    <h1>Dashboard</h1>
 
-    <!-- Form to add a new task -->
     <div>
-        <h3>Add New Task</h3>
-        <input type="text" id="taskName" placeholder="Task name">
-        <label for="isComplete">Completed: </label>
-        <input type="checkbox" id="isComplete">
-        <button onclick="addTask()">Add Task</button>
+        <h3>Paperless Frontend</h3>
+        <button onclick="getDocument(1)">Get Document</button>
+        <div id="output" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- Task list -->
-    <ul id="todoList"></ul>
 
     <script src="/app.js"></script>
 </body>
