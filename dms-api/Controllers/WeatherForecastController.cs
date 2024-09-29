@@ -14,7 +14,7 @@ namespace DocumentManagementSystem.Controllers
             // Hardcoded data
             var data = new
             {
-                message = "Hello, this is hardcoded data!",
+                message = "Hello World!",
                 status = 200
             };
 
