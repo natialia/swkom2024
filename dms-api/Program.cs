@@ -1,4 +1,4 @@
-
+using DocumentManagementSystem.Mappings;
 namespace DocumentManagementSystem
 {
     public class Program
@@ -20,6 +20,9 @@ namespace DocumentManagementSystem
             });
             // Add services to the container.
             builder.Services.AddControllers();
+
+            //Automapper
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

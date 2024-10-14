@@ -5,11 +5,10 @@ services:
       context: ./dms-api  # Updated path to the REST API project
       dockerfile: Dockerfile
     ports:
-      - "5028:8080"
       - "8081:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080 # Stellt sicher, dass nur HTTP verwendet wird
+      - ASPNETCORE_URLS=http://+:8081 # Stellt sicher, dass nur HTTP verwendet wird
     restart: always
 
   webui:
@@ -24,5 +23,32 @@ services:
       - ./web-ui/wwwroot:/app/wwwroot  # Statische Dateien mounten
     depends_on:
       - dms-api
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Binde das Volume f�r persistente Datenspeicherung ein
+
+  dms-dal:
+    image: dms-dal-image
+    build:
+      context: ./dms-dal
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - db
+
+volumes:
+   postgres_data:  # Definiertes Volume fuer persistente Datenspeicherung von PostgreSQL
 
 
