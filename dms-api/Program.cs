@@ -1,50 +1,68 @@
+using DocumentManagementSystem.Mappings;
+using DocumentManagementSystem.DTOs;
+using DocumentManagementSystem.Controllers;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
-namespace DocumentManagementSystem
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+//Mapping
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+//FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<DocumentDTOValidator>();
+
+// CORS konfigurieren, um Anfragen von localhost:80 (WebUI) zuzulassen
+builder.Services.AddCors(options =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
+    options.AddPolicy("AllowWebUI",
+        policy =>
         {
-            var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-            var builder = WebApplication.CreateBuilder(args);
+            policy.WithOrigins("http://localhost") // Die URL deiner Web-UI
+                .AllowAnyHeader()
+                .AllowAnyOrigin()
+                .AllowAnyMethod();
+        });
+});
 
-            // Add CORS policy: https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-8.0
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: MyAllowSpecificOrigins,
-                                  policy =>
-                                  {
-                                      policy.WithOrigins("http://localhost",
-                                                          "http://localhost:80");
-                                  });
-            });
-            // Add services to the container.
-            builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+    c.IncludeXmlComments(xmlPath);
+});
+// Registriere HttpClient für den DocumentController
+builder.Services.AddHttpClient("DocumentDAL", client =>
+{
+    client.BaseAddress = new Uri("http://documentdal:8081"); // URL des DAL Services in Docker
+});
 
-            var app = builder.Build();
+var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    //swagger unter http://localhost:8080/swagger/index.html fixieren (sichert gegen Konflikte durch nginx oder browser-cache oder Konfigurationsprobleme)
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+    c.RoutePrefix = "swagger";
+});
 
-            app.UseHttpsRedirection();
-            app.UseCors(MyAllowSpecificOrigins);
+// Verwende die CORS-Policy
+app.UseCors("AllowWebUI");
 
-            app.UseAuthorization();
+//app.UseHttpsRedirection();
 
+// Explicitly listen to HTTP only
+app.Urls.Add("http://*:8080"); // Stelle sicher, dass die App nur HTTP verwendet
+app.UseAuthorization();
 
-            app.MapControllers();
+app.MapControllers();
 
-            app.Urls.Add("http://localhost:8081");
-
-            app.Run();
-        }
-    }
-}
+app.Run();

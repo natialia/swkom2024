@@ -1,42 +1,119 @@
-﻿using DocumentManagementSystem.Models;
+﻿using DocumentManagementSystem.DTOs; // Assuming this is where your DTO classes are located
+using DocumentManagementSystem.Models; // Assuming this is where your Document model is located
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.Extensions.Logging;
+using AutoMapper;
 namespace DocumentManagementSystem.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class DocumentController : ControllerBase
     {
-        private readonly ILogger<DocumentController> _logger;
+        private readonly IHttpClientFactory _httpClientFactory; // For creating HTTP clients
+        private readonly IMapper _mapper; // For mapping DTOs to entities
+        private readonly ILogger<DocumentController> _logger; // For logging
 
-        public DocumentController(ILogger<DocumentController> logger)
+        public DocumentController(IHttpClientFactory httpClientFactory, IMapper mapper, ILogger<DocumentController> logger)
         {
+            _httpClientFactory = httpClientFactory;
+            _mapper = mapper;
             _logger = logger;
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Document>> GetDocument(long id)
+        [HttpGet]
+        public async Task<IActionResult> GetAllDocuments()
         {
-            return Ok("Document was found");
+            var client = _httpClientFactory.CreateClient("DocumentDAL"); // Create a client for the DAL
+            var response = await client.GetAsync("/api/documents"); // Call the endpoint in the DAL
+
+            if (response.IsSuccessStatusCode)
+            {
+                var items = await response.Content.ReadFromJsonAsync<IEnumerable<Document>>(); // Read documents from the response
+                var dtoItems = _mapper.Map<IEnumerable<DocumentDTO>>(items); // Map entities to DTOs
+                return Ok(dtoItems); // Return the mapped DTOs
+            }
+
+            return StatusCode((int)response.StatusCode, "Error retrieving documents from DAL");
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetDocument(long id)
+        {
+            var client = _httpClientFactory.CreateClient("DocumentDAL");
+            var response = await client.GetAsync($"/api/documents/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var item = await response.Content.ReadFromJsonAsync<Document>(); // Get the document
+                if (item == null)
+                {
+                    return NotFound("Document not found"); // Return 404 if not found
+                }
+
+                var dtoItem = _mapper.Map<DocumentDTO>(item); // Map entity to DTO
+                return Ok(dtoItem); // Return the DTO
+            }
+
+            return StatusCode((int)response.StatusCode, "Error retrieving document from DAL");
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostDocument(Document document)
+        public async Task<IActionResult> PostDocument(DocumentDTO documentDto)
         {
-            return Ok("document was created");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState); // Return 400 for invalid model state
+            }
+
+            var client = _httpClientFactory.CreateClient("DocumentDAL");
+            var document = _mapper.Map<Document>(documentDto); // Map DTO to entity
+            var response = await client.PostAsJsonAsync("/api/documents", document); // Send POST request to DAL
+
+            if (response.IsSuccessStatusCode)
+            {
+                return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto); // Return 201 Created
+            }
+
+            return StatusCode((int)response.StatusCode, "Error creating document in DAL");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutDocument(long id, Document document)
+        public async Task<IActionResult> PutDocument(long id, DocumentDTO documentDto)
         {
-            return Ok("document was updated");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState); // Return 400 for invalid model state
+            }
+
+            if (id != documentDto.Id)
+            {
+                return BadRequest("ID mismatch"); // Ensure ID matches
+            }
+
+            var client = _httpClientFactory.CreateClient("DocumentDAL");
+            var document = _mapper.Map<Document>(documentDto); // Map DTO to entity
+            var response = await client.PutAsJsonAsync($"/api/documents/{id}", document); // Send PUT request to DAL
+
+            if (response.IsSuccessStatusCode)
+            {
+                return NoContent(); // Return 204 No Content
+            }
+
+            return StatusCode((int)response.StatusCode, "Error updating document in DAL");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDocument(long id)
         {
-            return Ok("document was deleted");
-        }
+            var client = _httpClientFactory.CreateClient("DocumentDAL");
+            var response = await client.DeleteAsync($"/api/documents/{id}"); // Send DELETE request to DAL
 
+            if (response.IsSuccessStatusCode)
+            {
+                return NoContent(); // Return 204 No Content
+            }
+
+            return StatusCode((int)response.StatusCode, "Error deleting document in DAL");
+        }
     }
 }

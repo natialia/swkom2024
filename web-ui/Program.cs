@@ -1,25 +1,16 @@
-namespace web_ui
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-            // Füge statische Dateien hinzu
-            builder.Services.AddControllersWithViews();
+// Füge statische Dateien hinzu
+builder.Services.AddControllersWithViews();
 
-            var app = builder.Build();
+var app = builder.Build();
 
-            // Aktiviere die Verwendung von statischen Dateien
-            app.UseStaticFiles();
+// Aktiviere die Verwendung von statischen Dateien
+app.UseStaticFiles();
 
-            // Aktiviere den Routing-Support
-            app.UseRouting();
+// Aktiviere den Routing-Support
+app.UseRouting();
 
-            app.MapGet("/", () => Results.Redirect("/index.html")); // Weiterleitung auf die Hauptseite
+app.MapGet("/", () => Results.Redirect("/index.html")); // Weiterleitung auf die Hauptseite
 
-            app.Run();
-        }
-    }
-}
+app.Run();

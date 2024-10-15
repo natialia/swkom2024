@@ -1,36 +1,48 @@
+using Microsoft.EntityFrameworkCore;
+using dms_dal.Data;
+using dms_dal.Repositories;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
-namespace dms_dal
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddDbContext<DocumentContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("TodoDatabase")));
+
+builder.Services.AddScoped<IDocumentItemRepository, DocumentItemRepository>();
+
+var app = builder.Build();
+
+// Migrations und Datenbankerstellung anwenden
+using (var scope = app.Services.CreateScope())
 {
-    public class Program
+    var context = scope.ServiceProvider.GetRequiredService<DocumentContext>();
+
+    // Verbindungstest zur Datenbank
+    try
     {
-        public static void Main(string[] args)
+        Console.WriteLine("Versuche, eine Verbindung zur Datenbank herzustellen...");
+
+        // Warte, bis die Datenbank bereit ist
+        while (!context.Database.CanConnect())
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
+            Console.WriteLine("Datenbank ist noch nicht bereit, warte...");
+            Thread.Sleep(1000); // Warte 1 Sekunde
         }
+
+        Console.WriteLine("Verbindung zur Datenbank erfolgreich.");
+
+        // Migrations anwenden und die Datenbank erstellen/aktualisieren
+        context.Database.EnsureCreated();
+        Console.WriteLine("Datenbankmigrationen erfolgreich angewendet.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Fehler bei der Anwendung der Migrationen: {ex.Message}");
     }
 }
+
+app.MapControllers();
+
+app.Run();
