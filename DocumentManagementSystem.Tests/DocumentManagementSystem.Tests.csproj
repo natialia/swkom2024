@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\swkom2024\dms-api\dms-api.csproj" />
-    <ProjectReference Include="..\swkom2024\dms-dal\dms-dal.csproj" />
-    <ProjectReference Include="..\swkom2024\web-ui\web-ui.csproj" />
+    <ProjectReference Include="..\dms-api\dms-api.csproj" />
+    <ProjectReference Include="..\dms-dal\dms-dal.csproj" />
+    <ProjectReference Include="..\web-ui\web-ui.csproj" />
   </ItemGroup>
 
   <ItemGroup>
