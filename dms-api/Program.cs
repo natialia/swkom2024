@@ -1,6 +1,5 @@
 using DocumentManagementSystem.Mappings;
 using DocumentManagementSystem.DTOs;
-using DocumentManagementSystem.Controllers;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 
@@ -10,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 //Mapping
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+//builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 //FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

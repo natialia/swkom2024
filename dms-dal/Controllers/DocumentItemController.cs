@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using dms_dal.Repositories;
 using dms_dal.Entities;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace dms_dal.Controllers
 {

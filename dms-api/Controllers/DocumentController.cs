@@ -1,7 +1,6 @@
-﻿using DocumentManagementSystem.DTOs; // Assuming this is where your DTO classes are located
-using DocumentManagementSystem.Models; // Assuming this is where your Document model is located
+﻿using DocumentManagementSystem.DTOs;
+using DocumentManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using AutoMapper;
 namespace DocumentManagementSystem.Controllers
 {

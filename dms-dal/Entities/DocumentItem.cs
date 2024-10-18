@@ -3,7 +3,7 @@
     public class DocumentItem(long id)
     {
         public long Id { get; set; } = id;
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public bool? IsComplete { get; set; }
     }
 }

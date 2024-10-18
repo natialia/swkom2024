@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using dms_dal.Entities;
+﻿using dms_dal.Entities;
 
 namespace dms_dal.Repositories
 {

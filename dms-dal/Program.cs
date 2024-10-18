@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using dms_dal.Data;
 using dms_dal.Repositories;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,14 +24,22 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine("Versuche, eine Verbindung zur Datenbank herzustellen...");
 
-        // Warte, bis die Datenbank bereit ist
-        while (!context.Database.CanConnect())
+        // Wait until the database is ready
+        while (true)
         {
-            Console.WriteLine("Datenbank ist noch nicht bereit, warte...");
-            Thread.Sleep(1000); // Warte 1 Sekunde
+            try
+            {
+                await context.Database.OpenConnectionAsync();
+                context.Database.CloseConnection();
+                Console.WriteLine("Verbindung zur Datenbank erfolgreich.");
+                break; // Exit the loop if the connection is successful
+            }
+            catch (NpgsqlException)
+            {
+                Console.WriteLine("Datenbank ist noch nicht bereit, warte...");
+                await Task.Delay(1000); // Wait 1 second before retrying
+            }
         }
-
-        Console.WriteLine("Verbindung zur Datenbank erfolgreich.");
 
         // Migrations anwenden und die Datenbank erstellen/aktualisieren
         context.Database.EnsureCreated();

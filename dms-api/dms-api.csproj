@@ -7,8 +7,6 @@
     <UserSecretsId>7144a5d0-6b25-4f49-9c5e-b5a6bf6b093f</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<DocumentationFile>bin\Debug\net8.0\dms-api.xml</DocumentationFile>
-	<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\dms-dal\dms-dal.csproj" />
-    <ProjectReference Include="..\web-ui\web-ui.csproj" />
+	<ProjectReference Include="..\dms-dal\dms-dal.csproj" />
+	<ProjectReference Include="..\web-ui\web-ui.csproj" />
   </ItemGroup>
 
 </Project>

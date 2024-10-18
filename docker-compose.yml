@@ -10,6 +10,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
     restart: always
+    depends_on:
+      - db
 
   webui:
     image: web-ui-image
@@ -34,12 +36,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  documentdal:
-    image: documentdal_image
+  dms-dal:
+    image: dms-dal-image
     build:
-      context: .
-      dockerfile: ./dms-dal/Dockerfile
+      context: ./dms-dal
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:

@@ -7,6 +7,7 @@
     <RootNamespace>dms_dal</RootNamespace>
     <UserSecretsId>57a85b78-fc44-440e-af8b-540dff0310c7</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	<RootNamespace>dms_dal</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
