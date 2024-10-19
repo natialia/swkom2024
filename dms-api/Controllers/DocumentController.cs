@@ -2,6 +2,7 @@
 using DocumentManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
+using dms_dal.Entities;
 namespace DocumentManagementSystem.Controllers
 {
     [ApiController]
@@ -65,7 +66,7 @@ namespace DocumentManagementSystem.Controllers
             }
 
             var client = _httpClientFactory.CreateClient("dms-dal");
-            var document = _mapper.Map<Document>(documentDto); // Map DTO to entity
+            var document = _mapper.Map<DocumentItem>(documentDto); // Map DTO to entity
             var response = await client.PostAsJsonAsync("/api/document", document); // Send POST request to DAL
 
             if (response.IsSuccessStatusCode)
@@ -90,7 +91,7 @@ namespace DocumentManagementSystem.Controllers
             }
 
             var client = _httpClientFactory.CreateClient("dms-dal");
-            var document = _mapper.Map<Document>(documentDto); // Map DTO to entity
+            var document = _mapper.Map<DocumentItem>(documentDto); // Map DTO to entity
             var response = await client.PutAsJsonAsync($"/api/document/{id}", document); // Send PUT request to DAL
 
             if (response.IsSuccessStatusCode)
