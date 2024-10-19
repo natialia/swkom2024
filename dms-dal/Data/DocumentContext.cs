@@ -24,7 +24,7 @@ namespace dms_dal.Data
 
                 entity.Property(e => e.IsComplete);  // Konfiguriert die "IsComplete"-Spalte
             });
-
+            modelBuilder.Entity<DocumentItem>().HasData(new DocumentItem(1) { Name = "first", IsComplete = true });
             base.OnModelCreating(modelBuilder);
         }
     }
