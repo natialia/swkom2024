@@ -39,9 +39,9 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 // Registriere HttpClient für den DocumentController
-builder.Services.AddHttpClient("DocumentDAL", client =>
+builder.Services.AddHttpClient("dms-dal", client =>
 {
-    client.BaseAddress = new Uri("http://documentdal:8081"); // URL des DAL Services in Docker
+    client.BaseAddress = new Uri("http://dms-dal:8080"); // URL des DAL Services in Docker
 });
 
 var app = builder.Build();
@@ -49,7 +49,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    //swagger unter http://localhost:8080/swagger/index.html fixieren (sichert gegen Konflikte durch nginx oder browser-cache oder Konfigurationsprobleme)
+    //swagger unter http://localhost:8081/swagger/index.html fixieren (sichert gegen Konflikte durch nginx oder browser-cache oder Konfigurationsprobleme)
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
     c.RoutePrefix = "swagger";
 });
@@ -60,7 +60,7 @@ app.UseCors("AllowWebUI");
 //app.UseHttpsRedirection();
 
 // Explicitly listen to HTTP only
-app.Urls.Add("http://*:8080"); // Stelle sicher, dass die App nur HTTP verwendet
+app.Urls.Add("http://*:8081"); // Stelle sicher, dass die App nur HTTP verwendet
 app.UseAuthorization();
 
 app.MapControllers();

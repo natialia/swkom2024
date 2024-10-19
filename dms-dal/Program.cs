@@ -5,6 +5,11 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration //because appsettings was renamed
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("dal-appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<DocumentContext>(options =>

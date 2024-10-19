@@ -1,5 +1,10 @@
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration //because appsettings was renamed
+    .SetBasePath(Directory.GetCurrentDirectory()) 
+    .AddJsonFile("web-appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Füge statische Dateien hinzu
 builder.Services.AddControllersWithViews();
 
