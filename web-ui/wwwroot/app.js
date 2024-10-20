@@ -10,6 +10,12 @@ async function getDocument(id) {
     document.getElementById("output").textContent = data;
 }
 
+async function getDocuments(){
+    const response = await fetch(`http://localhost:8081/Document`);
+    const data = await response.text();
+    document.getElementById("output").textContent = data;
+}
+
 // Upload a document when the form is submitted
 document.getElementById('uploadForm').addEventListener('submit', uploadForm);
 
