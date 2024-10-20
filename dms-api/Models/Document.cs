@@ -2,9 +2,9 @@
 {
     public class Document
     {
-        public long Id {  get; set; }
+        public int Id {  get; set; }
 
-        public Document(long id)
+        public Document(int id)
         {
             Id = id;
         }

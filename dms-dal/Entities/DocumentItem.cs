@@ -1,8 +1,8 @@
 ﻿namespace dms_dal.Entities
 {
-    public class DocumentItem(long id)
+    public class DocumentItem(int id)
     {
-        public long Id { get; set; } = id;
+        public int Id { get; set; } = id;
         public string? Name { get; set; }
         public bool? IsComplete { get; set; }
     }

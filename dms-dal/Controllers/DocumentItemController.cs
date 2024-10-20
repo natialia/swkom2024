@@ -4,17 +4,21 @@ using dms_dal.Entities;
 
 namespace dms_dal.Controllers
 {
-    public class DocumentItemController
-    {
         [ApiController]
         [Route("api/[controller]")]
-        public class TodoController(IDocumentItemRepository repository) : ControllerBase
+        public class DocumentItemController(IDocumentItemRepository repository) : ControllerBase
         {
             [HttpGet]
             public async Task<IEnumerable<DocumentItem>> GetAsync()
             {
                 return await repository.GetAllAsync();
             }
+
+            [HttpGet("{id}")]
+            public async Task<DocumentItem> GetAsync(int id)
+            {
+                return await repository.GetByIdAsync(id);
+        }
 
             [HttpPost]
             public async Task<IActionResult> PostAsync(DocumentItem item)
@@ -55,5 +59,4 @@ namespace dms_dal.Controllers
                 return NoContent();
             }
         }
-    }
 }

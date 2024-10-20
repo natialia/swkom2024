@@ -17,6 +17,9 @@ builder.Services.AddDbContext<DocumentContext>(options =>
 
 builder.Services.AddScoped<IDocumentItemRepository, DocumentItemRepository>();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 // Migrations und Datenbankerstellung anwenden
@@ -54,6 +57,12 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"Fehler bei der Anwendung der Migrationen: {ex.Message}");
     }
+}
+// Swagger-Middleware hinzufügen
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "YourAPI v1"));
 }
 
 app.MapControllers();

@@ -24,7 +24,7 @@ namespace DocumentManagementSystem.Controllers
         public async Task<IActionResult> GetAllDocuments()
         {
             var client = _httpClientFactory.CreateClient("dms-dal"); // Create a client for the DAL
-            var response = await client.GetAsync("/api/document"); // Call the endpoint in the DAL
+            var response = await client.GetAsync("/api/DocumentItem"); // Call the endpoint in the DAL
 
             if (response.IsSuccessStatusCode)
             {
@@ -37,10 +37,10 @@ namespace DocumentManagementSystem.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetDocument(long id)
+        public async Task<IActionResult> GetDocument(int id)
         {
             var client = _httpClientFactory.CreateClient("dms-dal");
-            var response = await client.GetAsync($"/api/document/{id}");
+            var response = await client.GetAsync($"/api/DocumentItem/{id}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -67,7 +67,7 @@ namespace DocumentManagementSystem.Controllers
 
             var client = _httpClientFactory.CreateClient("dms-dal");
             var document = _mapper.Map<DocumentItem>(documentDto); // Map DTO to entity
-            var response = await client.PostAsJsonAsync("/api/document", document); // Send POST request to DAL
+            var response = await client.PostAsJsonAsync("/api/DocumentItem", document); // Send POST request to DAL
 
             if (response.IsSuccessStatusCode)
             {
@@ -78,7 +78,7 @@ namespace DocumentManagementSystem.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutDocument(long id, DocumentDTO documentDto)
+        public async Task<IActionResult> PutDocument(int id, DocumentDTO documentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -92,7 +92,7 @@ namespace DocumentManagementSystem.Controllers
 
             var client = _httpClientFactory.CreateClient("dms-dal");
             var document = _mapper.Map<DocumentItem>(documentDto); // Map DTO to entity
-            var response = await client.PutAsJsonAsync($"/api/document/{id}", document); // Send PUT request to DAL
+            var response = await client.PutAsJsonAsync($"/api/DocumentItem/{id}", document); // Send PUT request to DAL
 
             if (response.IsSuccessStatusCode)
             {
@@ -103,10 +103,10 @@ namespace DocumentManagementSystem.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDocument(long id)
+        public async Task<IActionResult> DeleteDocument(int id)
         {
             var client = _httpClientFactory.CreateClient("dms-dal");
-            var response = await client.DeleteAsync($"/api/document/{id}"); // Send DELETE request to DAL
+            var response = await client.DeleteAsync($"/api/DocumentItem/{id}"); // Send DELETE request to DAL
 
             if (response.IsSuccessStatusCode)
             {
