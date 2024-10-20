@@ -41,7 +41,6 @@ namespace dms_dal.Controllers
                 }
 
                 existingItem.Name = item.Name;
-                existingItem.IsComplete = item.IsComplete;
                 await repository.UpdateAsync(existingItem);
                 return NoContent();
             }

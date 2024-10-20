@@ -8,6 +8,6 @@
   "AllowedHosts": "*",
 
   "ConnectionStrings": {
-    "TodoDatabase": "Host=db;Port=5432;Database=postgres;Username=postgres;Password=postgres;"
+    "DocumentDatabase": "Host=db;Port=5432;Database=postgres;Username=postgres;Password=postgres;"
   }
 }

@@ -25,8 +25,7 @@ public class MappingTests
         var documentItem = new DocumentItem
         {
             Id = 1,
-            Name = "Sample Item",
-            IsComplete = true
+            Name = "Sample Item"
         };
 
         // Act
@@ -36,7 +35,6 @@ public class MappingTests
         Assert.NotNull(documentDto);
         Assert.Equal(documentItem.Id, documentDto.Id);
         Assert.Equal("*Sample Item*", documentDto.Name); // Check for asterisks
-        Assert.Equal(documentItem.IsComplete, documentDto.IsComplete);
     }
 
     [Fact]
@@ -46,8 +44,7 @@ public class MappingTests
         var documentDto = new DocumentDTO
         {
             Id = 2,
-            Name = "*Another Sample Item*",
-            IsComplete = false
+            Name = "*Another Sample Item*"
         };
 
         // Act
@@ -57,6 +54,5 @@ public class MappingTests
         Assert.NotNull(documentItem);
         Assert.Equal(documentDto.Id, documentItem.Id);
         Assert.Equal("Another Sample Item", documentItem.Name); // Check for removed asterisks
-        Assert.Equal(documentDto.IsComplete, documentItem.IsComplete);
     }
 }

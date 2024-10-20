@@ -13,7 +13,7 @@ builder.Configuration //because appsettings was renamed
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<DocumentContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("TodoDatabase")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
 
 builder.Services.AddScoped<IDocumentItemRepository, DocumentItemRepository>();
 

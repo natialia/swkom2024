@@ -25,8 +25,7 @@ public class DocumentItemRepositoryTests
         // Arrange
         var documentItem = new DocumentItem() // Parameterless constructor
         {
-            Name = "Test Item",
-            IsComplete = false
+            Name = "Test Item"
         };
 
         // Act
@@ -36,7 +35,6 @@ public class DocumentItemRepositoryTests
         var itemInDb = await _context.DocumentItems.FindAsync(documentItem.Id); // Use the original documentItem to retrieve
         Assert.NotNull(itemInDb);
         Assert.Equal("Test Item", itemInDb.Name);
-        Assert.False(itemInDb.IsComplete);
     }
 
 
@@ -46,8 +44,7 @@ public class DocumentItemRepositoryTests
         // Arrange
         var documentItem = new DocumentItem() // Using parameterless constructor
         {
-            Name = "Test Item",
-            IsComplete = false
+            Name = "Test Item"
         };
 
         await _repository.AddAsync(documentItem); // Directly call without assigning
