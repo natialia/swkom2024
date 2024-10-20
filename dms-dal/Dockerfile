@@ -4,20 +4,19 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["dms-dal/dms-dal.csproj", "dms-dal/"]
+COPY ["./dms-dal/dms-dal.csproj", "./dms-dal/"]
 RUN dotnet restore "./dms-dal/dms-dal.csproj"
 COPY . .
-WORKDIR "/src/dms-dal"
-RUN dotnet build "./dms-dal.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/."
+RUN dotnet build "./dms-dal/dms-dal.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./dms-dal.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./dms-dal/dms-dal.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

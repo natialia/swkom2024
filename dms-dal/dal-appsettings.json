@@ -6,11 +6,8 @@
     }
   },
   "AllowedHosts": "*",
-  "Kestrel": {
-    "Endpoints": {
-      "Http2": {
-        "Url": "http://*:8081"
-      }
-    }
+
+  "ConnectionStrings": {
+    "DocumentDatabase": "Host=db;Port=5432;Database=postgres;Username=postgres;Password=postgres;"
   }
 }
