@@ -1,5 +1,4 @@
 ﻿using DocumentManagementSystem.DTOs;
-using DocumentManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using dms_dal.Entities;
@@ -28,7 +27,7 @@ namespace DocumentManagementSystem.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var items = await response.Content.ReadFromJsonAsync<IEnumerable<Document>>(); // Read documents from the response
+                var items = await response.Content.ReadFromJsonAsync<IEnumerable<DocumentItem>>(); // Read documents from the response
                 var dtoItems = _mapper.Map<IEnumerable<DocumentDTO>>(items); // Map entities to DTOs
                 return Ok(dtoItems); // Return the mapped DTOs
             }
@@ -44,7 +43,7 @@ namespace DocumentManagementSystem.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var item = await response.Content.ReadFromJsonAsync<Document>(); // Get the document
+                var item = await response.Content.ReadFromJsonAsync<DocumentItem>(); // Get the document
                 if (item == null)
                 {
                     return NotFound("Document not found"); // Return 404 if not found
