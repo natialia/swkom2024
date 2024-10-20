@@ -1,6 +1,8 @@
 ﻿window.onload = function () {
 };
 
+const apiUrl = 'http://localhost:8081/document';
+
 // Fetch and display a document by its ID
 async function getDocument(id) {
     const response = await fetch(`http://localhost:8081/Document/${id}`);
@@ -9,56 +11,33 @@ async function getDocument(id) {
 }
 
 // Upload a document when the form is submitted
-document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+document.getElementById('uploadForm').addEventListener('submit', uploadForm);
+
+async function uploadForm(event) {
+    console.log(event);
     event.preventDefault(); // Prevent the default form submission
 
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
+
+    let outputDiv = document.getElementById("output");
 
     if (!file) {
         alert('Please select a file to upload!');
         return;
     }
 
-    const formData = new FormData();
-    formData.append('document', file); // Append the file to FormData
-
-    try {
-        const response = await fetch('http://localhost:8081/api/documents/upload', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Error uploading document');
-        }
-
-        const result = await response.json();
-        document.getElementById('response').innerText = `Document successfully uploaded: ${result.name}`;
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('response').innerText = `Error: ${error.message}`;
-    }
-});
-
-// Optional: If you want to keep the previous document name submission function
-async function submitDocumentName() {
-    let input = document.getElementById("docName");
-    let outputDiv = document.getElementById("output");
-    const name = input.value; // Use value instead of textContent
-    input.value = ""; // Clear the input
-
-    const document = {
-        name: name,
-        isComplete: true
+    const formData = {
+        Id: 0,
+        Name: file.name
     };
 
-    fetch("http://localhost:8081/Document", {
+    fetch(apiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(document)
+        body: JSON.stringify(formData)
     }).then(response => {
         outputDiv.innerHTML = response.statusText;
     });
