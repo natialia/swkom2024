@@ -2,6 +2,9 @@ using DocumentManagementSystem.Mappings;
 using DocumentManagementSystem.DTOs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using dms_dal_new.Data;
+using dms_bl.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,10 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 //FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<DocumentDTOValidator>();
+  
+builder.Services.AddDbContext<DocumentContext>(options =>
+options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
+builder.Services.AddScoped<DocumentService>();
 
 // CORS konfigurieren, um Anfragen von localhost:80 (WebUI) zuzulassen
 builder.Services.AddCors(options =>

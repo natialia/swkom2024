@@ -14,5 +14,6 @@ namespace dms_dal_new.Repositories
         Task AddAsync(DocumentItem item);
         Task UpdateAsync(DocumentItem item);
         Task DeleteAsync(int id);
+        Task<bool> ContainsItem(int id);
     }
 }

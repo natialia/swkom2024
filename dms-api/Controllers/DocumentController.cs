@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using dms_dal.Entities;
+using dms_dal.Data;
+using dms_bl.Services;
+using dms_bl.Models;
+using Azure;
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -12,28 +16,23 @@ namespace DocumentManagementSystem.Controllers
         private readonly IHttpClientFactory _httpClientFactory; // For creating HTTP clients
         private readonly IMapper _mapper; // For mapping DTOs to entities
         private readonly ILogger<DocumentController> _logger; // For logging
+        private readonly DocumentService _documentService;
 
-        public DocumentController(IHttpClientFactory httpClientFactory, IMapper mapper, ILogger<DocumentController> logger)
+        public DocumentController(IHttpClientFactory httpClientFactory, IMapper mapper, ILogger<DocumentController> logger,  DocumentService documentService)
         {
             _httpClientFactory = httpClientFactory;
             _mapper = mapper;
             _logger = logger;
+            _documentService = documentService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllDocuments()
         {
-            var client = _httpClientFactory.CreateClient("dms-dal"); // Create a client for the DAL
-            var response = await client.GetAsync("/api/DocumentItem"); // Call the endpoint in the DAL
+            var documents = _documentService.GetAllDocumentsAsync();
+            var dtos = _mapper.Map<IEnumerable<DocumentDTO>>(documents);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var items = await response.Content.ReadFromJsonAsync<IEnumerable<DocumentItem>>(); // Read documents from the response
-                var dtoItems = _mapper.Map<IEnumerable<DocumentDTO>>(items); // Map entities to DTOs
-                return Ok(dtoItems); // Return the mapped DTOs
-            }
-
-            return StatusCode((int)response.StatusCode, "Error retrieving documents from DAL");
+            return Ok(dtos);
         }
 
         [HttpGet("{id}")]
@@ -60,21 +59,17 @@ namespace DocumentManagementSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> PostDocument(DocumentDTO documentDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState); // Return 400 for invalid model state
-            }
+            var document = _mapper.Map<Document>(documentDto); // Map DTO to Document
 
-            var client = _httpClientFactory.CreateClient("dms-dal");
-            var document = _mapper.Map<DocumentItem>(documentDto); // Map DTO to entity
-            var response = await client.PostAsJsonAsync("/api/DocumentItem", document); // Send POST request to DAL
+            var result = await _documentService.AddDocumentAsync(document);
 
-            if (response.IsSuccessStatusCode)
+            if (result)
             {
                 return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto); // Return 201 Created
             }
 
-            return StatusCode((int)response.StatusCode, "Error creating document in DAL");
+            return StatusCode(TODO, "Error creating document in DAL");
+
         }
 
         [HttpPut("{id}")]

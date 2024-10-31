@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>dms_bl</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -10,6 +9,14 @@
 
   <ItemGroup>
     <Folder Include="Validators\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\dms-dal-new\dms-dal-new.csproj" />
   </ItemGroup>
 
 </Project>

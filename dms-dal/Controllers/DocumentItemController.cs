@@ -18,7 +18,7 @@ namespace dms_dal.Controllers
             public async Task<DocumentItem> GetAsync(int id)
             {
                 return await repository.GetByIdAsync(id);
-        }
+            }
 
             [HttpPost]
             public async Task<IActionResult> PostAsync(DocumentItem item)
@@ -49,6 +49,7 @@ namespace dms_dal.Controllers
             public async Task<IActionResult> DeleteAsync(int id)
             {
                 var item = await repository.GetByIdAsync(id);
+        
                 if (item == null)
                 {
                     return NotFound();

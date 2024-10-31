@@ -49,5 +49,10 @@ namespace dms_dal_new.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<bool> ContainsItem(int id)
+        {
+            return await GetByIdAsync(id) != null;
+        }
     }
 }
