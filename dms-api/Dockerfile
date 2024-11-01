@@ -9,6 +9,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["./dms-api/dms-api.csproj", "./dms-api/"]
+COPY ["./dms-bl/dms-bl.csproj", "./dms-bl/"]
+COPY ["./dms-dal-new/dms-dal-new.csproj", "./dms-dal-new/"]
 RUN dotnet restore "./dms-api/dms-api.csproj"
 COPY . .
 WORKDIR "/src/."
