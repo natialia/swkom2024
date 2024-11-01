@@ -33,9 +33,19 @@ async function uploadForm(event) {
         return;
     }
 
+    let fileSize = file.size.toString();
+    let fileString = "";
+    if (fileSize.length < 7) {
+        fileString = `${Math.round(+fileSize / 1024).toFixed(2)}kb`
+    } else {
+        fileString = `${(Math.round(+fileSize / 1024) / 1000).toFixed(2)}MB`
+    }
+
     const formData = {
         Id: 0,
-        Name: file.name
+        Name: file.name..substring(0, filename.lastIndexOf('.')),
+        FileType: file.type,
+        FileSize: fileString
     };
 
     fetch(apiUrl, {

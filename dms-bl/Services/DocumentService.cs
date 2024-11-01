@@ -50,8 +50,9 @@ namespace dms_bl.Services
             }
 
             existingItem.Name = item.Name;
-            var documentItem = _mapper.Map<DocumentItem>(item);
-            await _documentRepository.UpdateAsync(documentItem);
+            existingItem.FileType = item.FileType;
+            existingItem.FileSize = item.FileSize;
+            await _documentRepository.UpdateAsync(existingItem);
             return new ServiceResponse { Success = true, Message = "Successfully updated document" };
         }
 
