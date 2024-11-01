@@ -16,35 +16,53 @@ namespace dms_bl.Services
             _mapper = mapper;
         }
 
-        public async Task<Document> GetDocumentByIdAsync(int id)
+        public async Task<Document?> GetDocumentByIdAsync(int id)
         {
-            return null;
+            var item = await _documentRepository.GetByIdAsync(id); //returns null if not found: check in api
+            if (item == null) return null;
+
+            var document = _mapper.Map<Document>(item);
+            return document;
         }
 
         public async Task<IEnumerable<Document>> GetAllDocumentsAsync()
         {
-            var items = _documentRepository.GetAllAsync();
+            var items = await _documentRepository.GetAllAsync();
             
             var documents = _mapper.Map<IEnumerable<Document>>(items); // Map entities to Documents
             return documents; // Return the mapped DTOs
         }
 
-        public async Task<bool> AddDocumentAsync(Document item)
+        public async Task<ServiceResponse> AddDocumentAsync(Document item)
         {
             var documentItem = _mapper.Map<DocumentItem>(item);
-            _documentRepository.AddAsync(documentItem);
+            await _documentRepository.AddAsync(documentItem);
 
-            return true;
+            return new ServiceResponse { Success = true, Message = "Successfully added document" }; ;
         }
 
-        public async Task UpdateDocumentAsync(Document item)
+        public async Task<ServiceResponse> UpdateDocumentAsync(int id, Document item)
         {
-            //if !repository.Contains ..
+            var existingItem = await _documentRepository.GetByIdAsync(id);
+            if (existingItem == null)
+            {
+                return new ServiceResponse { Success = false, Message = "Could not update: does not exist" };
+            }
+
+            existingItem.Name = item.Name;
+            var documentItem = _mapper.Map<DocumentItem>(item);
+            await _documentRepository.UpdateAsync(documentItem);
+            return new ServiceResponse { Success = true, Message = "Successfully updated document" };
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<ServiceResponse> DeleteAsync(int id)
         {
-            //if !repository.Contains ..
+            if (!_documentRepository.ContainsItem(id).Result)
+            {
+                return new ServiceResponse { Success = false, Message = "Could not delete: does not exist" };
+            }
+            await _documentRepository.DeleteAsync(id);
+            return new ServiceResponse { Success = true, Message = "Successfully deleted document" };
         }
     }
 }

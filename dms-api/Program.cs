@@ -5,6 +5,7 @@ using FluentValidation.AspNetCore;
 using dms_dal_new.Data;
 using dms_bl.Services;
 using Microsoft.EntityFrameworkCore;
+using dms_dal_new.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<DocumentDTOValidator>();
   
 builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
-builder.Services.AddScoped<DocumentService>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IDocumentService, DocumentService>(); //give it document repository
 
 // CORS konfigurieren, um Anfragen von localhost:80 (WebUI) zuzulassen
 builder.Services.AddCors(options =>
@@ -43,11 +45,6 @@ builder.Services.AddSwaggerGen(c =>
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
     c.IncludeXmlComments(xmlPath);
-});
-// Registriere HttpClient für den DocumentController
-builder.Services.AddHttpClient("dms-dal", client =>
-{
-    client.BaseAddress = new Uri("http://dms-dal:8080"); // URL des DAL Services in Docker
 });
 
 var app = builder.Build();

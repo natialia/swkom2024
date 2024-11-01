@@ -9,10 +9,10 @@ namespace dms_bl.Services
 {
     public interface IDocumentService
     {
-        Task<Document> GetDocumentByIdAsync(int id);
+        Task<Document?> GetDocumentByIdAsync(int id);
         Task<IEnumerable<Document>> GetAllDocumentsAsync();
-        Task AddDocumentAsync(Document item);
-        Task UpdateDocumentAsync(Document item);
-        Task DeleteAsync(int id);
+        Task<ServiceResponse> AddDocumentAsync(Document item);
+        Task<ServiceResponse> UpdateDocumentAsync(int id, Document item);
+        Task<ServiceResponse> DeleteAsync(int id);
     }
 }
