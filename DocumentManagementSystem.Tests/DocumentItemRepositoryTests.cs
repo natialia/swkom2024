@@ -1,12 +1,12 @@
-﻿using dms_dal.Data;
-using dms_dal.Entities;
-using dms_dal.Repositories;
+﻿using dms_dal_new.Data;
+using dms_dal_new.Entities;
+using dms_dal_new.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 public class DocumentItemRepositoryTests
 {
-    private readonly DocumentItemRepository _repository;
+    private readonly DocumentRepository _repository;
     private readonly DocumentContext _context;
 
     public DocumentItemRepositoryTests()

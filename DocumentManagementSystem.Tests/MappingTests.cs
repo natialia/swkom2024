@@ -1,5 +1,5 @@
 using AutoMapper;
-using dms_dal.Entities;
+using dms_dal_new.Entities;
 using DocumentManagementSystem.DTOs;
 using DocumentManagementSystem.Mappings;
 using Xunit;

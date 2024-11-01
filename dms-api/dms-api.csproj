@@ -23,7 +23,6 @@
   <ItemGroup>
 	<ProjectReference Include="..\dms-bl\dms-bl.csproj" />
 	<ProjectReference Include="..\dms-dal-new\dms-dal-new.csproj" />
-	<ProjectReference Include="..\dms-dal\dms-dal.csproj" />
 	<ProjectReference Include="..\web-ui\web-ui.csproj" />
   </ItemGroup>
 

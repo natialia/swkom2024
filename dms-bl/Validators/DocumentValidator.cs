@@ -29,6 +29,11 @@ namespace dms_bl.Validators
             {
                 return sizeInKb <= 10000; // Maximum of 10 MB (should be enough)
             }
+            if(double.TryParse(fileSize.Replace("kB", ""), out double doubleSizeInKb))
+            {
+                return doubleSizeInKb <= 10000.0;
+            }
+
 
             return false;
         }

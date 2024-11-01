@@ -38,10 +38,13 @@ async function uploadForm(event) {
 
     const formData = {
         Id: 0,
-        Name: file.name..substring(0, filename.lastIndexOf('.')),
+        Name: file.name.substring(0, file.name.lastIndexOf('.')),
         FileType: file.type,
         FileSize: fileString
     };
+    console.log("Name is " + formData.Name);
+    console.log("Filetype is " + formData.FileType);
+    console.log("file size is " + formData.FileSize);
 
     fetch(apiUrl, {
         method: 'POST',

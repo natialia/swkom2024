@@ -22,7 +22,7 @@ namespace dms_dal_new.Data
                     .IsRequired()
                     .HasMaxLength(100);  // Konfiguriert den "Name"-Spalten
             });
-            modelBuilder.Entity<DocumentItem>().HasData(new DocumentItem(1) { Name = "first" });
+            modelBuilder.Entity<DocumentItem>().HasData(new DocumentItem(1) { Name = "first", FileType = "application/pdf", FileSize="400kB" });
             base.OnModelCreating(modelBuilder);
         }
     }

@@ -1,8 +1,6 @@
 ﻿using DocumentManagementSystem.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
-using dms_dal.Entities;
-using dms_dal.Data;
 using dms_bl.Services;
 using dms_bl.Models;
 using Azure;
