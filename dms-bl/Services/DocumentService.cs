@@ -2,6 +2,7 @@
 using dms_bl.Models;
 using dms_dal_new.Entities;
 using dms_dal_new.Repositories;
+using FluentValidation;
 
 namespace dms_bl.Services
 {
@@ -9,11 +10,13 @@ namespace dms_bl.Services
     {
         private readonly IDocumentRepository _documentRepository;
         private readonly IMapper _mapper;
+        private readonly IValidator<Document> _documentValidator;
 
-        public DocumentService(IDocumentRepository documentRepository, IMapper mapper)
+        public DocumentService(IDocumentRepository documentRepository, IMapper mapper, IValidator<Document> documentValidator)
         {
             _documentRepository = documentRepository; // Injected in api
             _mapper = mapper;
+            _documentValidator = documentValidator;
         }
 
         public async Task<Document?> GetDocumentByIdAsync(int id)
@@ -35,14 +38,25 @@ namespace dms_bl.Services
 
         public async Task<ServiceResponse> AddDocumentAsync(Document item)
         {
+            var validator = _documentValidator.Validate(item);
+            if (!validator.IsValid)
+            {
+                return new ServiceResponse { Success = false, Message = "Could not add: Invalid Document Object" };
+            }
             var documentItem = _mapper.Map<DocumentItem>(item);
             await _documentRepository.AddAsync(documentItem);
 
-            return new ServiceResponse { Success = true, Message = "Successfully added document" }; ;
+            return new ServiceResponse { Success = true, Message = "Successfully added document" };
         }
 
         public async Task<ServiceResponse> UpdateDocumentAsync(int id, Document item)
         {
+            var validator = _documentValidator.Validate(item);
+            if (!validator.IsValid)
+            {
+                return new ServiceResponse { Success = false, Message = "Could not update: Invalid Document Object" };
+            }
+
             var existingItem = await _documentRepository.GetByIdAsync(id);
             if (existingItem == null)
             {

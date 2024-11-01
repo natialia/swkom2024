@@ -34,12 +34,7 @@ async function uploadForm(event) {
     }
 
     let fileSize = file.size.toString();
-    let fileString = "";
-    if (fileSize.length < 7) {
-        fileString = `${Math.round(+fileSize / 1024).toFixed(2)}kb`
-    } else {
-        fileString = `${(Math.round(+fileSize / 1024) / 1000).toFixed(2)}MB`
-    }
+    let fileString = `${Math.round(+fileSize / 1024).toFixed(2)}kB`;
 
     const formData = {
         Id: 0,

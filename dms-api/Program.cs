@@ -7,6 +7,7 @@ using dms_bl.Services;
 using Microsoft.EntityFrameworkCore;
 using dms_dal_new.Repositories;
 using Npgsql;
+using dms_bl.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,8 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 //FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<DocumentDTOValidator>();
-  
+builder.Services.AddValidatorsFromAssemblyContaining<DocumentValidator>();
+
 builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
