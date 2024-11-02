@@ -37,23 +37,39 @@ namespace DocumentManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllDocuments()
         {
-            var documents = await _documentService.GetAllDocumentsAsync();
-            var dtos = _mapper.Map<IEnumerable<DocumentDTO>>(documents);
+            try
+            {
+                var documents = await _documentService.GetAllDocumentsAsync();
+                var dtos = _mapper.Map<IEnumerable<DocumentDTO>>(documents);
 
-            return Ok(dtos); //Return all documents
+                return Ok(dtos); //Return all documents
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"An error occurred while retrieving the document: {ex.Message}");
+                return StatusCode(500, "An internal server error occurred.");
+            }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDocument(int id)
         {
-            var item = await _documentService.GetDocumentByIdAsync(id); // Get the document
-            if (item == null)
+            try
             {
-                return NotFound("Document not found"); // Return 404 if not found
-            }
+                var item = await _documentService.GetDocumentByIdAsync(id); // Get the document
+                if (item == null)
+                {
+                    return NotFound("Document not found"); // Return 404 if not found
+                }
 
-            var dtoItem = _mapper.Map<DocumentDTO>(item); // Map entity to DTO
-            return Ok(dtoItem); // Return the DTO
+                var dtoItem = _mapper.Map<DocumentDTO>(item); // Map entity to DTO
+                return Ok(dtoItem); // Return the DTO
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"An error occurred while retrieving the document: {ex.Message}");
+                return StatusCode(500, "An internal server error occurred.");
+            }
         }
 
         [HttpPost]
@@ -68,7 +84,7 @@ namespace DocumentManagementSystem.Controllers
                 if (result.Success)
                 {
                     SendToMessageQueue(document.Name);
-                    _logger.LogInformation("Document created successfully with ID: {DocumentId}", document.Id);
+                    _logger.LogInformation($"Document created successfully with ID: {document.Id}");
                     return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto); // Return 201 Created
                 }
                 _logger.LogWarning($"Document validation failed: {result.Message}");
@@ -89,38 +105,54 @@ namespace DocumentManagementSystem.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutDocument(int id, DocumentDTO documentDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState); // Return 400 for invalid model state
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState); // Return 400 for invalid model state
+                }
 
-            if (id != documentDto.Id)
+                if (id != documentDto.Id)
+                {
+                    return BadRequest("ID mismatch"); // Ensure ID matches
+                }
+
+                var document = _mapper.Map<Document>(documentDto); // Map DTO to document
+                var response = await _documentService.UpdateDocumentAsync(id, document);
+
+                if (response.Success)
+                {
+                    return NoContent(); // Return 204 No Content
+                }
+
+                return StatusCode(400, response.Message); //Return 400 Bad Request
+            }
+            catch(Exception ex)
             {
-                return BadRequest("ID mismatch"); // Ensure ID matches
+                _logger.LogError("An error occurred while creating the document: {Exception}", ex);
+                return StatusCode(500, $"An internal server error occurred: {ex.Message}");
             }
-
-            var document = _mapper.Map<Document>(documentDto); // Map DTO to document
-            var response = await _documentService.UpdateDocumentAsync(id, document);
-
-            if (response.Success)
-            {
-                return NoContent(); // Return 204 No Content
-            }
-
-            return StatusCode(400, response.Message); //Return 400 Bad Request
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDocument(int id)
         {
-            var response = await _documentService.DeleteAsync(id); // Send DELETE request to BL
-
-            if (response.Success)
+            try
             {
-                return NoContent(); // Return 204 No Content
-            }
+                var response = await _documentService.DeleteAsync(id); // Send DELETE request to BL
 
-            return StatusCode(400, response.Message); //return 400 Bad Request
+                if (response.Success)
+                {
+                    return NoContent(); // Return 204 No Content
+                }
+
+                return StatusCode(400, response.Message); //return 400 Bad Request
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred while creating the document: {Exception}", ex);
+                return StatusCode(500, $"An internal server error occurred: {ex.Message}");
+            }
         }
 
         private void SendToMessageQueue(string fileName)
