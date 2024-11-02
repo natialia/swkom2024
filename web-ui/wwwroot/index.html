@@ -85,7 +85,8 @@
         <h3>Document Upload</h3>
         <form id="uploadForm">
             <label class="custom-file-input" for="fileInput">Datei auswählen</label>
-            <input type="file" id="fileInput" accept=".pdf" required /><br>
+            <input type="file" id="fileInput" accept=".pdf" required>
+            <div id="selectedFileInfo"></div><br>
             <button type="submit">Upload Document</button>
         </form>
         <div id="response" style="margin-top: 20px;"></div>

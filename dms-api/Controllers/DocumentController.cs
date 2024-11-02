@@ -11,14 +11,13 @@ namespace DocumentManagementSystem.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DocumentController : ControllerBase, IDisposable
+    public class DocumentController : ControllerBase
     {
         private readonly IMapper _mapper; // For mapping DTOs to entities
         private readonly ILogger<DocumentController> _logger; // For logging
         private readonly IDocumentService _documentService;
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
-        private bool _disposed; // To detect redundant calls
 
         public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentService documentService)
         {
@@ -26,12 +25,12 @@ namespace DocumentManagementSystem.Controllers
             _logger = logger;
             _documentService = documentService;
 
-            // Stelle die Verbindung zu RabbitMQ her
+            // Connect to RabbitMQ
             var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "user", Password = "password" };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-            // Deklariere die Queue
+            // Declare Queue
             _channel.QueueDeclare(queue: "document_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 
