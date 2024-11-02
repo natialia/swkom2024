@@ -1,62 +1,67 @@
 ﻿body {
     font-family: Arial, sans-serif;
     background-color: #f8d3e1;
-    color: #333; /* Darker text for better contrast */
+    color: #333;
     margin: 20px;
     padding: 20px;
-    border-radius: 15px; /* Rounding the body */
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-    text-align: center; /* Center the content */
+    border-radius: 15px;
+    text-align: center;
 }
 
-h1, h3 {
-    color: #007BFF; /* Header color */
+input[type="file"] {
+    display: none; /* Hide the default file input */
 }
 
-input[type="text"], input[type="file"] {
-    padding: 10px;
+.custom-file-input {
+    display: inline-block;
+    padding: 10px 20px;
     font-size: 14px;
-    border: 2px solid #007BFF; /* Slightly thicker border */
-    border-radius: 25px; /* Rounder input fields */
-    margin-bottom: 15px; /* More space below inputs */
-    width: calc(100% - 20px); /* Full width with padding */
-    box-sizing: border-box; /* Include padding in width */
+    border: 2px solid #C71585;
+    border-radius: 25px;
+    background-color: white; /* Background color for custom button */
+    color: #C71585; /* Text color */
+    cursor: pointer;
+    margin-bottom: 15px; /* Space below the button */
 }
 
 button {
     padding: 10px 15px;
     font-size: 14px;
     cursor: pointer;
-    background-color: #007BFF;
     color: white;
     border: none;
-    border-radius: 25px; /* Rounder buttons */
+    border-radius: 25px;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    background-color: #C71585;
 }
-
-    button.delete {
-        background-color: #dc3545;
-    }
 
     button:hover {
         opacity: 0.9;
         transform: translateY(-2px);
     }
 
-ul {
-    list-style-type: none;
-    padding: 0;
+#output {
+    margin-top: 20px;
+    color: black;
 }
 
-li {
-    margin: 10px auto; /* Center list items with auto margins */
+.document-item {
+    display: block; /* Each item as a block */
     padding: 15px;
-    background-color: #ff99cc; /* Light Pink for list items */
-    border-radius: 15px; /* Rounder list items */
-    transition: background-color 0.3s ease;
-    width: 80%; /* Control the width of list items */
+    margin: 10px auto;
+    border: 2px solid #C71585;
+    border-radius: 15px; /* Rounded corners */
+    width: 50%; /* Control the width of list items */
+    background-color: white; /* Background color for items */
 }
 
-    li:hover {
-        background-color: #ff80b3; /* Hover effect for list items */
-    }
+.file-info {
+    display: block; /* Stack info lines */
+    margin-top: 5px;
+}
+
+#response {
+    margin-top: 10px;
+    color: #333;
+    font-weight: bold;
+}
