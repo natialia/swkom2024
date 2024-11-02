@@ -16,7 +16,7 @@ public class DocumentItemRepositoryTests
             .Options;
 
         _context = new DocumentContext(options);
-        _repository = new DocumentItemRepository(_context);
+        _repository = new DocumentRepository(_context);
     }
 
     [Fact]
