@@ -22,6 +22,12 @@ namespace DocumentManagementSystem.Controllers
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DocumentController"/> class.
+        /// </summary>
+        /// <param name="mapper">Mapper for converting between DTOs and entities.</param>
+        /// <param name="logger">Logger for recording actions and errors.</param>
+        /// <param name="documentService">Service for document operations.</param>
         public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentService documentService)
         {
             _mapper = mapper; // Initialize the mapper
@@ -57,6 +63,10 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieves all documents.
+        /// </summary>
+        /// <returns>An <see cref="IActionResult"/> containing the list of documents.</returns>
         [HttpGet]
         public async Task<IActionResult> GetAllDocuments()
         {
@@ -77,6 +87,11 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieves a specific document by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the document to retrieve.</param>
+        /// <returns>An <see cref="IActionResult"/> containing the document if found, otherwise 404.</returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDocument(int id)
         {
@@ -103,6 +118,11 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Creates a new document.
+        /// </summary>
+        /// <param name="request">The request containing document data.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         [HttpPost]
         public async Task<IActionResult> PostDocument([FromForm] DocumentRequest request)
         {
@@ -152,6 +172,12 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Updates an existing document.
+        /// </summary>
+        /// <param name="id">The ID of the document to update.</param>
+        /// <param name="documentDto">The updated document data.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutDocument(int id, DocumentDTO documentDto)
         {
@@ -185,6 +211,11 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes a document by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the document to delete.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDocument(int id)
         {
@@ -207,6 +238,9 @@ namespace DocumentManagementSystem.Controllers
                 return StatusCode(500, $"An internal server error occurred: {ex.Message}");
             }
         }
+
+        ///
+
 
         private void SendToMessageQueue(string fileName)
         {
