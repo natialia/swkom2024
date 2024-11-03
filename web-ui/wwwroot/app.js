@@ -1,32 +1,56 @@
-﻿window.onload = function () {
-};
+﻿const apiUrl = 'http://localhost:8081/document';
 
-const apiUrl = 'http://localhost:8081/document';
-
-// Fetch and display a document by its ID
-async function getDocument(id) {
-    const response = await fetch(`http://localhost:8081/Document/${id}`);
-    const data = await response.text();
-    document.getElementById("output").textContent = data;
+// Fetch and display documents
+async function getDocuments() {
+    const response = await fetch(`${apiUrl}`);
+    const documents = await response.json(); // Get the JSON response
+    displayDocuments(documents); // Display documents
 }
 
-async function getDocuments(){
-    const response = await fetch(`http://localhost:8081/Document`);
-    const data = await response.text();
-    document.getElementById("output").textContent = data;
+// Display the list of documents
+function displayDocuments(documents) {
+    const outputDiv = document.getElementById("output");
+    outputDiv.innerHTML = ''; // Clear existing list
+
+    documents.forEach(doc => {
+        const listItem = document.createElement('div');
+        listItem.classList.add('document-item'); // Add a class for styling
+
+        // Create a formatted display
+        listItem.innerHTML = `
+                        <strong>${doc.name}</strong><br>
+                        <span class="file-info">Type: ${doc.fileType}</span>
+                        <span class="file-info">Size: ${doc.fileSize}</span>
+                        <button class="delete-button" onclick="deleteDocument(${doc.id})">Delete</button>
+                    `;
+
+        outputDiv.appendChild(listItem);
+    });
+}
+
+// Delete a document by its ID
+async function deleteDocument(id) {
+    const response = await fetch(`${apiUrl}/${id}`, {
+        method: 'DELETE'
+    });
+
+    if (response.ok) {
+        getDocuments(); // Refresh the document list after deletion
+    } else {
+        alert('Failed to delete the document.');
+    }
 }
 
 // Upload a document when the form is submitted
 document.getElementById('uploadForm').addEventListener('submit', uploadForm);
 
 async function uploadForm(event) {
-    console.log(event);
     event.preventDefault(); // Prevent the default form submission
 
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
 
-    let outputDiv = document.getElementById("output");
+    let outputDiv = document.getElementById("response");
 
     if (!file) {
         alert('Please select a file to upload!');
@@ -42,9 +66,6 @@ async function uploadForm(event) {
         FileType: file.type,
         FileSize: fileString
     };
-    console.log("Name is " + formData.Name);
-    console.log("Filetype is " + formData.FileType);
-    console.log("file size is " + formData.FileSize);
 
     fetch(apiUrl, {
         method: 'POST',
@@ -54,5 +75,6 @@ async function uploadForm(event) {
         body: JSON.stringify(formData)
     }).then(response => {
         outputDiv.innerHTML = response.statusText;
+        getDocuments(); // Refresh the document list after upload
     });
 }

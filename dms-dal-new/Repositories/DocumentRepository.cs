@@ -1,10 +1,6 @@
 ﻿using dms_dal_new.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using dms_dal_new.Data;
+using dms_dal_new.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace dms_dal_new.Repositories
@@ -20,39 +16,81 @@ namespace dms_dal_new.Repositories
 
         public async Task<IEnumerable<DocumentItem>> GetAllAsync()
         {
-            return await _context.DocumentItems!.ToListAsync();
+            try
+            {
+                return await _context.DocumentItems!.ToListAsync();
+            }
+            catch(Exception ex)
+            {
+                throw new DataAccessException("Error retrieving all documents in DAL", ex);
+            }
         }
 
         public async Task<DocumentItem> GetByIdAsync(int id)
         {
-            return (await _context.DocumentItems!.FindAsync(id))!;
+            try
+            {
+                return (await _context.DocumentItems!.FindAsync(id))!;
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Error retrieving document by ID in DAL", ex);
+            }
         }
 
         public async Task AddAsync(DocumentItem item)
         {
-            await _context.DocumentItems!.AddAsync(item);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.DocumentItems!.AddAsync(item);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Error adding new document in DAL", ex);
+            }
         }
 
         public async Task UpdateAsync(DocumentItem item)
         {
-            _context.DocumentItems!.Update(item);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.DocumentItems!.Update(item);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Error updating document in DAL", ex);
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var item = await _context.DocumentItems!.FindAsync(id);
-            if (item != null)
+            try
             {
-                _context.DocumentItems.Remove(item);
-                await _context.SaveChangesAsync();
+                var item = await _context.DocumentItems!.FindAsync(id);
+                if (item != null)
+                {
+                    _context.DocumentItems.Remove(item);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Error deleting document in DAL", ex);
             }
         }
 
         public async Task<bool> ContainsItem(int id)
         {
-            return await GetByIdAsync(id) != null;
+            try
+            {
+                return await GetByIdAsync(id) != null;
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Error checking if document exists in DAL", ex);
+            }
         }
     }
 }

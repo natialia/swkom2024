@@ -1,42 +1,67 @@
-﻿﻿body {
+﻿body {
     font-family: Arial, sans-serif;
-    background-color: #2c2c2c;
-    color: white;
+    background-color: #f8d3e1;
+    color: #333;
     margin: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
 }
 
-input[type="text"] {
-    padding: 5px;
+input[type="file"] {
+    display: none; /* Hide the default file input */
+}
+
+.custom-file-input {
+    display: inline-block;
+    padding: 10px 20px;
     font-size: 14px;
+    border: 2px solid #C71585;
+    border-radius: 25px;
+    background-color: white; /* Background color for custom button */
+    color: #C71585; /* Text color */
+    cursor: pointer;
+    margin-bottom: 15px; /* Space below the button */
 }
 
 button {
-    padding: 5px 10px;
-    margin: 5px;
+    padding: 10px 15px;
     font-size: 14px;
     cursor: pointer;
-    background-color: #007BFF;
     color: white;
     border: none;
-    border-radius: 3px;
+    border-radius: 25px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    background-color: #C71585;
 }
-
-    button.delete {
-        background-color: #dc3545;
-    }
 
     button:hover {
-        opacity: 0.8;
+        opacity: 0.9;
+        transform: translateY(-2px);
     }
 
-ul {
-    list-style-type: none;
-    padding: 0;
+#output {
+    margin-top: 20px;
+    color: black;
 }
 
-li {
-    margin-bottom: 10px;
-    padding: 5px;
-    background-color: #444;
-    border-radius: 5px;
+.document-item {
+    display: block; /* Each item as a block */
+    padding: 15px;
+    margin: 10px auto;
+    border: 2px solid #C71585;
+    border-radius: 15px; /* Rounded corners */
+    width: 50%; /* Control the width of list items */
+    background-color: white; /* Background color for items */
+}
+
+.file-info {
+    display: block; /* Stack info lines */
+    margin-top: 5px;
+}
+
+#response {
+    margin-top: 10px;
+    color: #333;
+    font-weight: bold;
 }

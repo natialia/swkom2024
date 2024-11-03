@@ -6,53 +6,49 @@ using Xunit;
 
 public class MappingTests
 {
-    private readonly IMapper _mapper;
+    private readonly IMapper _mapper; // Mapper instance for testing
 
+    // Constructor to set up the AutoMapper configuration for the tests
     public MappingTests()
     {
+        // Create a mapping configuration and add the mapping profile
         var mappingConfig = new MapperConfiguration(mc =>
         {
-            mc.AddProfile(new MappingProfile());
+            mc.AddProfile(new MappingProfile()); // Assuming MappingProfile contains the mappings
         });
 
-        _mapper = mappingConfig.CreateMapper();
+        _mapper = mappingConfig.CreateMapper(); // Create the mapper instance
     }
 
     [Fact]
     public void DocumentItem_To_DocumentDTO_Should_Map_Correctly()
     {
-        // Arrange
         var documentItem = new DocumentItem
         {
-            Id = 1,
-            Name = "Sample Item"
+            Id = 1, // Set Id property
+            Name = "Sample Item" // Set Name property
         };
 
-        // Act
-        var documentDto = _mapper.Map<DocumentDTO>(documentItem);
+        var documentDto = _mapper.Map<DocumentDTO>(documentItem); // Perform the mapping
 
-        // Assert
-        Assert.NotNull(documentDto);
-        Assert.Equal(documentItem.Id, documentDto.Id);
-        Assert.Equal("*Sample Item*", documentDto.Name); // Check for asterisks
+        Assert.NotNull(documentDto); // Assert that the DTO is not null
+        Assert.Equal(documentItem.Id, documentDto.Id); // Assert that the Id is mapped correctly
+        Assert.Equal("*Sample Item*", documentDto.Name); // Assert that the Name is mapped with asterisks
     }
 
     [Fact]
     public void DocumentDTO_To_DocumentItem_Should_Map_Correctly()
     {
-        // Arrange
         var documentDto = new DocumentDTO
         {
-            Id = 2,
-            Name = "*Another Sample Item*"
+            Id = 2, // Set Id property
+            Name = "*Another Sample Item*" // Set Name property with asterisks
         };
 
-        // Act
-        var documentItem = _mapper.Map<DocumentItem>(documentDto);
+        var documentItem = _mapper.Map<DocumentItem>(documentDto); // Perform the mapping
 
-        // Assert
-        Assert.NotNull(documentItem);
-        Assert.Equal(documentDto.Id, documentItem.Id);
-        Assert.Equal("Another Sample Item", documentItem.Name); // Check for removed asterisks
+        Assert.NotNull(documentItem); // Assert that the DocumentItem is not null
+        Assert.Equal(documentDto.Id, documentItem.Id); // Assert that the Id is mapped correctly
+        Assert.Equal("Another Sample Item", documentItem.Name); // Assert that the Name is mapped without asterisks
     }
 }

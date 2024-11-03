@@ -25,15 +25,15 @@ builder.Services.AddValidatorsFromAssemblyContaining<DocumentValidator>();
 builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-builder.Services.AddScoped<IDocumentService, DocumentService>(); //give it document repository
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
-// CORS konfigurieren, um Anfragen von localhost:80 (WebUI) zuzulassen
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebUI",
         policy =>
         {
-            policy.WithOrigins("http://localhost") // Die URL deiner Web-UI
+            policy.WithOrigins("http://localhost")
                 .AllowAnyHeader()
                 .AllowAnyOrigin()
                 .AllowAnyMethod();
@@ -52,12 +52,12 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Migrations und Datenbankerstellung anwenden
+// Use Migrations and Database Creation
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<DocumentContext>();
 
-    // Verbindungstest zur Datenbank
+    // Database Connection Test
     try
     {
         Console.WriteLine("Versuche, eine Verbindung zur Datenbank herzustellen...");
@@ -79,7 +79,7 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        // Migrations anwenden und die Datenbank erstellen/aktualisieren
+        // Use Migrations and create/update Database
         context.Database.EnsureCreated();
         Console.WriteLine("Datenbankmigrationen erfolgreich angewendet.");
     }
@@ -97,14 +97,15 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Verwende die CORS-Policy
+// CORS-Policy
 app.UseCors("AllowWebUI");
 
 //app.UseHttpsRedirection();
 
 // Explicitly listen to HTTP only
-app.Urls.Add("http://*:8081"); // Stelle sicher, dass die App nur HTTP verwendet
+app.Urls.Add("http://*:8081");
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapControllers();
 

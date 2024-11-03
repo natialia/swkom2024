@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./dms-api/Dockerfile
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
@@ -25,6 +25,7 @@ services:
       - ./web-ui/wwwroot:/app/wwwroot
     depends_on:
       - dms-api
+      - rabbitmq
 
   db:
     image: postgres
@@ -41,6 +42,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "9093:9093"
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
 
 volumes:
   postgres_data:  # This defines the volume

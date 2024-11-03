@@ -4,23 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paperless</title>
-    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8d3e1;
+            color: #333;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            display: none; /* Hide the default file input */
+        }
+
+        .custom-file-input {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: 2px solid #C71585;
+            border-radius: 25px;
+            background-color: white; /* Background color for custom button */
+            color: #C71585; /* Text color */
+            cursor: pointer;
+            margin-bottom: 15px; /* Space below the button */
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            background-color: #C71585;
+        }
+
+            button:hover {
+                opacity: 0.9;
+                transform: translateY(-2px);
+            }
+
+        #output {
+            margin-top: 20px;
+            color: black;
+        }
+
+        .document-item {
+            display: block; /* Each item as a block */
+            padding: 15px;
+            margin: 10px auto;
+            border: 2px solid #C71585;
+            border-radius: 15px; /* Rounded corners */
+            width: 50%; /* Control the width of list items */
+            background-color: white; /* Background color for items */
+        }
+
+        .file-info {
+            display: block; /* Stack info lines */
+            margin-top: 5px;
+        }
+
+        #response {
+            margin-top: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h1>Dashboard</h1>
     <div>
         <h3>Paperless Frontend</h3>
         <button onclick="getDocuments()">Get All Documents</button>
-        <div id="output" style="margin-top: 20px;color:darkblue;"></div>
+        <div id="output"></div>
     </div>
     <div>
         <h3>Document Upload</h3>
         <form id="uploadForm">
-            <input type="file" id="fileInput" accept=".pdf" required />
+            <label class="custom-file-input" for="fileInput">Choose File</label>
+            <input type="file" id="fileInput" accept=".pdf" required>
+            <div id="selectedFileInfo"></div><br>
             <button type="submit">Upload Document</button>
         </form>
         <div id="response" style="margin-top: 20px;"></div>
     </div>
-    <script src="/app.js"></script>
+    <script>
+        const apiUrl = 'http://localhost:8081/document';
+
+        // Fetch and display documents
+        async function getDocuments() {
+            const response = await fetch(`${apiUrl}`);
+            const documents = await response.json(); // Get the JSON response
+            displayDocuments(documents); // Display documents
+        }
+
+        // Display the list of documents
+        function displayDocuments(documents) {
+            const outputDiv = document.getElementById("output");
+            outputDiv.innerHTML = ''; // Clear existing list
+
+            documents.forEach(doc => {
+                const listItem = document.createElement('div');
+                listItem.classList.add('document-item'); // Add a class for styling
+
+                // Create a formatted display
+                listItem.innerHTML = `
+                        <strong>${doc.name}</strong><br>
+                        <span class="file-info">Type: ${doc.fileType}</span>
+                        <span class="file-info">Size: ${doc.fileSize}</span>
+                        <button class="delete-button" onclick="deleteDocument(${doc.id})">Delete</button>
+                    `;
+
+                outputDiv.appendChild(listItem);
+            });
+        }
+
+        // Delete a document by its ID
+        async function deleteDocument(id) {
+            const response = await fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                getDocuments(); // Refresh the document list after deletion
+            } else {
+                alert('Failed to delete the document.');
+            }
+        }
+
+        // Upload a document when the form is submitted
+        document.getElementById('uploadForm').addEventListener('submit', uploadForm);
+
+        async function uploadForm(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            let outputDiv = document.getElementById("response");
+
+            if (!file) {
+                alert('Please select a file to upload!');
+                return;
+            }
+
+            let fileSize = file.size.toString();
+            let fileString = `${Math.round(+fileSize / 1024).toFixed(2)}kB`;
+            let fileName = file.name.substring(0, file.name.lastIndexOf('.'));
+
+            const formData = new FormData();
+            formData.append('UploadedDocument', file); // Dateifeld muss dem Wrapper-Feldnamen entsprechen
+            formData.append('Id', 0);
+            formData.append('Name', fileName);
+            formData.append('FileType', file.type);
+            formData.append('FileSize', fileString);
+
+            fetch(apiUrl, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    outputDiv.innerHTML = response.statusText;
+                    getDocuments();
+                })
+                .catch(error => {
+                    console.error('Fehler:', error);
+                });
+        }
+    </script>
 </body>
 </html>
