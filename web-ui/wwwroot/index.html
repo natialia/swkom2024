@@ -153,24 +153,26 @@
 
             let fileSize = file.size.toString();
             let fileString = `${Math.round(+fileSize / 1024).toFixed(2)}kB`;
+            let fileName = file.name.substring(0, file.name.lastIndexOf('.'));
 
-            const formData = {
-                Id: 0,
-                Name: file.name.substring(0, file.name.lastIndexOf('.')),
-                FileType: file.type,
-                FileSize: fileString
-            };
+            const formData = new FormData();
+            formData.append('UploadedDocument', file); // Dateifeld muss dem Wrapper-Feldnamen entsprechen
+            formData.append('Id', 0);
+            formData.append('Name', fileName);
+            formData.append('FileType', file.type);
+            formData.append('FileSize', fileString);
 
             fetch(apiUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            }).then(response => {
-                outputDiv.innerHTML = response.statusText;
-                getDocuments(); // Refresh the document list after upload
-            });
+                body: formData
+            })
+                .then(response => {
+                    outputDiv.innerHTML = response.statusText;
+                    getDocuments();
+                })
+                .catch(error => {
+                    console.error('Fehler:', error);
+                });
         }
     </script>
 </body>

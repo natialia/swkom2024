@@ -8,6 +8,7 @@ using System.Text;
 using RabbitMQ.Client.Exceptions;
 using DocumentManagementSystem.Exceptions;
 using DocumentManagementSystem.Exceptions.Messaging;
+using dms_api.DTOs;
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -103,11 +104,25 @@ namespace DocumentManagementSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostDocument(DocumentDTO documentDto)
+        public async Task<IActionResult> PostDocument([FromForm] DocumentRequest request)
         {
             _logger.LogInformation("Attempting to create a new document...");
             try
             {
+                var uploadedDocument = request.UploadedDocument;
+                var documentDto = new DocumentDTO
+                {
+                    Id = request.Id,
+                    Name = request.Name,
+                    FileType = request.FileType,
+                    FileSize = request.FileSize
+                };
+
+                if (uploadedDocument == null || uploadedDocument.Length == 0) //Receive uploaded file: use for document storage later
+                {
+                    _logger.LogWarning("No file uploaded.");
+                    return BadRequest("A file needs to be uploaded.");
+                }
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to Document entity
                 var result = await _documentService.AddDocumentAsync(document); // Add document via service
 
