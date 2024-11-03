@@ -21,7 +21,7 @@ namespace dms_bl.Services
 
         public async Task<Document?> GetDocumentByIdAsync(int id)
         {
-            var item = await _documentRepository.GetByIdAsync(id); //returns null if not found: check in api
+            var item = await _documentRepository.GetByIdAsync(id); // Returns null if not found: check in api
             if (item == null) return null;
 
             var document = _mapper.Map<Document>(item);

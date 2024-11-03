@@ -11,16 +11,16 @@ namespace dms_dal_new.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Manuelle Konfiguration der Tabelle
+            // Manual Configuration of the Table
             modelBuilder.Entity<DocumentItem>(entity =>
             {
-                entity.ToTable("DocumentItems");  // Setzt den Tabellennamen
+                entity.ToTable("DocumentItems");  // Table name
 
-                entity.HasKey(e => e.Id);  // Setzt den Primärschlüssel
+                entity.HasKey(e => e.Id);  // Primary Key
 
                 entity.Property(e => e.Name)
                     .IsRequired()
-                    .HasMaxLength(100);  // Konfiguriert den "Name"-Spalten
+                    .HasMaxLength(100);  // Configures the "Name"-Columns
             });
             modelBuilder.Entity<DocumentItem>().HasData(new DocumentItem(1) { Name = "first", FileType = "application/pdf", FileSize="400kB" });
             base.OnModelCreating(modelBuilder);

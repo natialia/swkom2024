@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using dms_dal_new.Entities;
+﻿using dms_dal_new.Entities;
 
 namespace dms_dal_new.Repositories
 {
