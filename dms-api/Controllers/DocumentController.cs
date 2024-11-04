@@ -244,6 +244,7 @@ namespace DocumentManagementSystem.Controllers
 
         private void SendToMessageQueue(string fileName)
         {
+            //TODO: move to business layer
             // Message Queue Logging
             try
             {

@@ -18,7 +18,7 @@ namespace dms_bl.Validators
                 .Must(IsAValidSize).WithMessage("File size too big (>10 MB).");
         }
 
-        private bool IsAValidSize(string fileSize)
+        private static bool IsAValidSize(string? fileSize)
         {
             if (int.TryParse(fileSize.Replace("kB", ""), out int sizeInKb))
             {

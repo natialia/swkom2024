@@ -156,7 +156,7 @@
             let fileName = file.name.substring(0, file.name.lastIndexOf('.'));
 
             const formData = new FormData();
-            formData.append('UploadedDocument', file); // Dateifeld muss dem Wrapper-Feldnamen entsprechen
+            formData.append('UploadedDocument', file); // Same as Documentrequest property names!!
             formData.append('Id', 0);
             formData.append('Name', fileName);
             formData.append('FileType', file.type);

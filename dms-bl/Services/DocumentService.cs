@@ -9,7 +9,7 @@ using dms_dal_new.Exceptions;
 namespace dms_bl.Services
 {
     public class DocumentService: IDocumentService
-    {
+    { //TODO: rename to logic instead of service
         private readonly IDocumentRepository _documentRepository;
         private readonly IMapper _mapper;
         private readonly IValidator<Document> _documentValidator;
@@ -76,7 +76,7 @@ namespace dms_bl.Services
             }
             catch (DataAccessException)
             {
-                throw;
+                throw; //TODO: wrappen wie andere excception
             }
             catch (Exception ex)
             {

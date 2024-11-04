@@ -10,7 +10,7 @@ public class DocumentDTOValidatorTests
     {
         _validator = new DocumentDTOValidator(); // Initialize the validator
     }
-
+    //TODO: 75% test coveragem use coverage tool
     [Fact]
     public void Should_Have_Error_When_Name_Is_Empty()
     {
