@@ -8,13 +8,13 @@ using dms_dal_new.Exceptions;
 
 namespace dms_bl.Services
 {
-    public class DocumentService: IDocumentService
-    { //TODO: rename to logic instead of service
+    public class DocumentLogic: IDocumentLogic
+    {
         private readonly IDocumentRepository _documentRepository;
         private readonly IMapper _mapper;
         private readonly IValidator<Document> _documentValidator;
 
-        public DocumentService(IDocumentRepository documentRepository, IMapper mapper, IValidator<Document> documentValidator)
+        public DocumentLogic(IDocumentRepository documentRepository, IMapper mapper, IValidator<Document> documentValidator)
         {
             _documentRepository = documentRepository; // Injected in api
             _mapper = mapper;
@@ -31,10 +31,6 @@ namespace dms_bl.Services
                 var document = _mapper.Map<Document>(item);
                 return document;
             }
-            catch(DataAccessException)
-            {
-                throw;
-            }
             catch(Exception ex)
             {
                 throw new BusinessException("Error getting document by ID in BL", ex);
@@ -49,10 +45,6 @@ namespace dms_bl.Services
 
                 var documents = _mapper.Map<IEnumerable<Document>>(items); // Map entities to Documents
                 return documents; // Return the mapped DTOs
-            }
-            catch(DataAccessException)
-            {
-                throw;
             }
             catch(Exception ex)
             {
@@ -73,10 +65,6 @@ namespace dms_bl.Services
                 await _documentRepository.AddAsync(documentItem);
 
                 return new ServiceResponse { Success = true, Message = "Successfully added document" };
-            }
-            catch (DataAccessException)
-            {
-                throw; //TODO: wrappen wie andere excception
             }
             catch (Exception ex)
             {
@@ -106,10 +94,6 @@ namespace dms_bl.Services
                 await _documentRepository.UpdateAsync(existingItem);
                 return new ServiceResponse { Success = true, Message = "Successfully updated document" };
             }
-            catch (DataAccessException)
-            {
-                throw;
-            }
             catch (Exception ex)
             {
                 throw new BusinessException("Error updating document in BL", ex);
@@ -126,10 +110,6 @@ namespace dms_bl.Services
                 }
                 await _documentRepository.DeleteAsync(id);
                 return new ServiceResponse { Success = true, Message = "Successfully deleted document" };
-            }
-            catch (DataAccessException)
-            {
-                throw;
             }
             catch (Exception ex)
             {

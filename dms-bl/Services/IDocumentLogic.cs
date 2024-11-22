@@ -2,7 +2,7 @@
 
 namespace dms_bl.Services
 {
-    public interface IDocumentService
+    public interface IDocumentLogic
     {
         Task<Document?> GetDocumentByIdAsync(int id);
         Task<IEnumerable<Document>> GetAllDocumentsAsync();

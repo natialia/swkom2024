@@ -25,7 +25,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<DocumentValidator>();
 builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
 // CORS Configuration
 builder.Services.AddCors(options =>

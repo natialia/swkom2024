@@ -18,7 +18,7 @@ namespace DocumentManagementSystem.Controllers
     {
         private readonly IMapper _mapper; // For mapping DTOs to entities
         private readonly ILogger<DocumentController> _logger; // For logging
-        private readonly IDocumentService _documentService; // Service for document operations
+        private readonly IDocumentLogic _documentService; // Service for document operations
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
 
@@ -28,7 +28,7 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="mapper">Mapper for converting between DTOs and entities.</param>
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentService documentService)
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
