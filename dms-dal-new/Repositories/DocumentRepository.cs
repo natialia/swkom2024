@@ -42,7 +42,7 @@ namespace dms_dal_new.Repositories
         {
             try
             {
-                await _context.DocumentItems!.AddAsync(item); //TODO: what is the !
+                await _context.DocumentItems!.AddAsync(item); //Tells the compiler it isnt null for sure
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
