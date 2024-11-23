@@ -38,12 +38,13 @@ namespace dms_dal_new.Repositories
             }
         }
 
-        public async Task AddAsync(DocumentItem item)
+        public async Task<DocumentItem?> AddAsync(DocumentItem item)
         {
             try
             {
                 await _context.DocumentItems!.AddAsync(item); //Tells the compiler it isnt null for sure
                 await _context.SaveChangesAsync();
+                return item;
             }
             catch (Exception ex)
             {

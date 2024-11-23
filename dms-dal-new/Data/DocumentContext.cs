@@ -18,6 +18,9 @@ namespace dms_dal_new.Data
 
                 entity.HasKey(e => e.Id);  // Primary Key
 
+                entity.Property(e => e.Id)
+                    .ValueGeneratedOnAdd(); // Ensure you get automatically generated ID back
+
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(100);  // Configures the "Name"-Columns

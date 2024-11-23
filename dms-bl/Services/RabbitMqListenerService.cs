@@ -10,9 +10,9 @@ using dms_dal_new.Entities;
 
 namespace dms_bl.Services
 {
-    public class RabbitMqListenerService: IHostedService
+    public class RabbitMqListenerService //: IHostedService
     {
-        private IConnection _connection;
+        /*private IConnection _connection;
         private IModel _channel;
         private readonly IHttpClientFactory _httpClientFactory;
         public Task StartAsync(CancellationToken cancellationToken)
@@ -133,6 +133,6 @@ namespace dms_bl.Services
             _channel?.Close();
             _connection?.Close();
             return Task.CompletedTask;
-        }
+        }*/
     }
 }

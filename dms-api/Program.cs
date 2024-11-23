@@ -26,6 +26,7 @@ builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
+builder.Services.AddScoped<IMessageQueueService, MessageQueueService>();
 
 // CORS Configuration
 builder.Services.AddCors(options =>
