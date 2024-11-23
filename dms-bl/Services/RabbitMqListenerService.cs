@@ -7,13 +7,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using dms_dal_new.Entities;
+using Microsoft.Extensions.Logging;
+using dms_bl.Exceptions;
+using dms_dal_new.Repositories;
+using System.Net.Http.Json;
+using dms_bl.Models;
 
 namespace dms_bl.Services
 {
-    public class RabbitMqListenerService //: IHostedService
+    public class RabbitMqListenerService: IHostedService
     {
-        /*private IConnection _connection;
+        private IConnection _connection;
         private IModel _channel;
+        private readonly ILogger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -21,9 +27,10 @@ namespace dms_bl.Services
             StartListening();
             return Task.CompletedTask;
         }
-
-        public RabbitMqListenerService(IHttpClientFactory httpClientFactory)
+        //with httpclient, because a hosted service cannot have scoped services (document logic, repository...) injected
+        public RabbitMqListenerService(ILogger<RabbitMqListenerService> logger, IHttpClientFactory httpClientFactory)
         {
+            _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -35,17 +42,20 @@ namespace dms_bl.Services
                 try
                 {
                     var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "user", Password = "password" };
+                    _logger.LogInformation("Attempting to connect to RabbitMQ...");
+
+                    // Establish the RabbitMQ connection
                     _connection = factory.CreateConnection();
                     _channel = _connection.CreateModel();
 
                     _channel.QueueDeclare(queue: "ocr_result_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-                    Console.WriteLine("Erfolgreich mit RabbitMQ verbunden und Queue erstellt.");
+                    _logger.LogInformation("Successfully connected to RabbitMQ and created result queue.");
 
-                    break; // Wenn die Verbindung klappt, verlässt es die Schleife
+                    break; // If connection works, leave loop for retries
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Fehler beim Verbinden mit RabbitMQ: {ex.Message}. Versuche es in 5 Sekunden erneut...");
+                    _logger.LogCritical("Unexpected error initializing RabbitMQ: {Exception} ... trying again in 5 seconds", ex);
                     Thread.Sleep(5000);
                     retries--;
                 }
@@ -53,10 +63,11 @@ namespace dms_bl.Services
 
             if (_connection == null || !_connection.IsOpen)
             {
-                throw new Exception("Konnte keine Verbindung zu RabbitMQ herstellen, alle Versuche fehlgeschlagen.");
+                throw new QueueException("Connection was not possible, 5 tries failed.");
             }
         }
 
+        //TODO: test if this works!!!!!!!!
         private void StartListening()
         {
             try
@@ -66,9 +77,9 @@ namespace dms_bl.Services
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
-                    var parts = message.Split('|');
+                    var parts = message.Split('|'); //TODO: Ocr Worker that sends "Id | Ocr text.." to ocr_result_queue
 
-                    Console.WriteLine($@"[Listener] Nachricht erhalten: {message}");
+                    _logger.LogInformation($"Received message: {message}");
 
                     if (parts.Length == 2)
                     {
@@ -76,47 +87,48 @@ namespace dms_bl.Services
                         var extractedText = parts[1];
                         if (string.IsNullOrEmpty(extractedText))
                         {
-                            Console.WriteLine($@"Fehler: Leerer OCR-Text für Task {id}. Nachricht wird ignoriert.");
+                            _logger.LogError($@"Error: Empty OCR-Text for File {id}. Message will be ignored.");
                             return;
                         }
 
-                        var client = _httpClientFactory.CreateClient("TodoDAL");
-                        var response = await client.GetAsync($"/api/todo/{id}");
-
-                        if (response.IsSuccessStatusCode)
+                        int numId;
+                        bool success = int.TryParse(id, out numId);
+                        if (success)
                         {
-                            var todoItem = await response.Content.ReadFromJsonAsync<TodoItem>();
-                            if (todoItem != null)
+                            var client = _httpClientFactory.CreateClient("dms-api");
+                            var response = await client.GetAsync($"/Document/{numId}"); //Get document 
+                            if(!response.IsSuccessStatusCode)
                             {
-                                Console.WriteLine($@"[Listener] Task {id} erfolgreich abgerufen.");
-                                Console.WriteLine($@"[Listener] OCR Text für Task {id}: {extractedText}");
-                                Console.WriteLine($@"[Listener] Task vor Update: {todoItem}");
+                                _logger.LogError($"Document of result queue not found! {response.StatusCode} {response.Content}");
+                                return;
+                            }
 
-                                todoItem.OcrText = extractedText;
+                            _logger.LogInformation($"Document with id {id} was found.");
 
-                                var updateResponse = await client.PutAsJsonAsync($"/api/todo/{id}", todoItem);
+                            var documentItem = await response.Content.ReadFromJsonAsync<Document>();
+
+                            if(documentItem != null)
+                            {
+                                _logger.LogInformation($"Document with id {id} was converted. Now adding {extractedText}");
+                                documentItem.OcrText = extractedText;
+                                var updateResponse = await client.PutAsJsonAsync($"/Document/ocrText/{id}", documentItem); //Update document with added ocr text
                                 if (!updateResponse.IsSuccessStatusCode)
                                 {
-                                    Console.WriteLine($@"Fehler beim Aktualisieren des Tasks mit ID {id}");
-                                }
-                                else
+                                    _logger.LogError($"Could not add Ocr Text to Document with id {id}, update failed");
+                                } else
                                 {
-                                    Console.WriteLine($@"OCR Text für Task {id} erfolgreich aktualisiert.");
+                                    _logger.LogInformation($"Successfully updated and added Ocr Text to Document {id}");
                                 }
-                            }
-                            else
+
+                            } else
                             {
-                                Console.WriteLine($@"[Listener] Task {id} nicht gefunden.");
+                                _logger.LogError($"Could not convert document with id {id}");
                             }
-                        }
-                        else
-                        {
-                            Console.WriteLine($@"Fehler beim Abrufen des Tasks mit ID {id}: {response.StatusCode}");
                         }
                     }
                     else
                     {
-                        Console.WriteLine(@"Fehler: Ungültige Nachricht empfangen.");
+                        _logger.LogError("Error: Invalid message received.");
                     }
                 };
 
@@ -124,7 +136,7 @@ namespace dms_bl.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($@"Fehler beim Starten des Listeners für OCR-Ergebnisse: {ex.Message}");
+                Console.WriteLine($@"Error starting listener for OCR result queue: {ex.Message}");
             }
         }
 
@@ -133,6 +145,6 @@ namespace dms_bl.Services
             _channel?.Close();
             _connection?.Close();
             return Task.CompletedTask;
-        }*/
+        }
     }
 }

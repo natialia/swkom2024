@@ -186,6 +186,38 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        [HttpPut("/ocrText/{id}")]
+        public async Task<IActionResult> PutDocumentWithText(int id, Document document)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState); // Return 400 for invalid model state
+                }
+
+                if (id != document.Id)
+                {
+                    return BadRequest("ID mismatch"); // Ensure ID matches
+                }
+
+                var response = await _documentService.UpdateDocumentAsync(id, document); // Update document via service
+
+                if (response.Success)
+                {
+                    return NoContent(); // Return 204 No Content
+                }
+
+                return StatusCode(400, response.Message); // Return 400 Bad Request
+            }
+            catch (Exception ex)
+            {
+                // Log errors during document update
+                _logger.LogError("An error occurred while creating the document: {Exception}", ex);
+                return StatusCode(500, $"An internal server error occurred: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Deletes a document by its ID.
         /// </summary>
