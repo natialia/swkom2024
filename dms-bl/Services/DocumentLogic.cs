@@ -52,19 +52,19 @@ namespace dms_bl.Services
             }
         }
 
-        public async Task<ServiceResponse> AddDocumentAsync(Document item)
+        public async Task<DocumentItem?> AddDocumentAsync(Document item)
         {
             try
             {
                 var validator = _documentValidator.Validate(item);
                 if (!validator.IsValid)
                 {
-                    return new ServiceResponse { Success = false, Message = "Could not add: Invalid Document Object" };
+                    return null;
                 }
                 var documentItem = _mapper.Map<DocumentItem>(item);
-                await _documentRepository.AddAsync(documentItem);
+                var addedDocument = await _documentRepository.AddAsync(documentItem);
 
-                return new ServiceResponse { Success = true, Message = "Successfully added document" };
+                return addedDocument;
             }
             catch (Exception ex)
             {

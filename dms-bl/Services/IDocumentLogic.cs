@@ -1,4 +1,5 @@
 ﻿using dms_bl.Models;
+using dms_dal_new.Entities;
 
 namespace dms_bl.Services
 {
@@ -6,7 +7,7 @@ namespace dms_bl.Services
     {
         Task<Document?> GetDocumentByIdAsync(int id);
         Task<IEnumerable<Document>> GetAllDocumentsAsync();
-        Task<ServiceResponse> AddDocumentAsync(Document item);
+        Task<DocumentItem?> AddDocumentAsync(Document item);
         Task<ServiceResponse> UpdateDocumentAsync(int id, Document item);
         Task<ServiceResponse> DeleteAsync(int id);
     }

@@ -22,5 +22,6 @@ namespace dms_dal_new.Entities
 
         public string? FileType { get; set; }
         public string? FileSize { get; set; }
+        public string? OcrText { get; set; }
     }
 }

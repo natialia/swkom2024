@@ -6,7 +6,7 @@ namespace dms_dal_new.Repositories
     {
         Task<IEnumerable<DocumentItem>> GetAllAsync();
         Task<DocumentItem> GetByIdAsync(int id);
-        Task AddAsync(DocumentItem item);
+        Task<DocumentItem?> AddAsync(DocumentItem item);
         Task UpdateAsync(DocumentItem item);
         Task DeleteAsync(int id);
         Task<bool> ContainsItem(int id);

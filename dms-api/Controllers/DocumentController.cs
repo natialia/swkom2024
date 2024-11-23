@@ -19,6 +19,7 @@ namespace DocumentManagementSystem.Controllers
         private readonly IMapper _mapper; // For mapping DTOs to entities
         private readonly ILogger<DocumentController> _logger; // For logging
         private readonly IDocumentLogic _documentService; // Service for document operations
+        private readonly IMessageQueueService _messageQueueService;
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
 
@@ -28,39 +29,13 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="mapper">Mapper for converting between DTOs and entities.</param>
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService)
+        /// /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
-
-            // RabbitMQ Connection + Logging
-            try
-            {
-                var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "user", Password = "password" };
-                _logger.LogInformation("Attempting to connect to RabbitMQ...");
-
-                // Establish the RabbitMQ connection
-                _connection = factory.CreateConnection();
-                _channel = _connection.CreateModel();
-
-                // Declare the queue for document messages
-                _channel.QueueDeclare(queue: "document_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-
-                _logger.LogInformation("Successfully connected to RabbitMQ and declared queue.");
-            }
-            catch (BrokerUnreachableException ex)
-            {
-                // Log critical error if connection to RabbitMQ fails
-                _logger.LogCritical("Failed to connect to RabbitMQ: {Exception}", ex);
-                throw new QueueException("Error establishing connection to RabbitMQ.", ex);
-            }
-            catch (Exception ex)
-            {
-                // Log unexpected errors during initialization
-                _logger.LogCritical("Unexpected error initializing RabbitMQ: {Exception}", ex);
-                throw new QueueException("An unexpected error occurred during RabbitMQ initialization.", ex);
-            }
+            _messageQueueService = messageQueueService; // Initialize message queue service
         }
 
         /// <summary>
@@ -144,19 +119,19 @@ namespace DocumentManagementSystem.Controllers
                     return BadRequest("A file needs to be uploaded.");
                 }
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to Document entity
-                var result = await _documentService.AddDocumentAsync(document); // Add document via service
+                var resultItem = await _documentService.AddDocumentAsync(document); // Add document via service
 
-                if (result.Success)
+                if (resultItem != null)
                 {
                     // Log success and send message to RabbitMQ
-                    _logger.LogInformation("Document created successfully with ID {DocumentId}.", document.Id);
-                    SendToMessageQueue(document.Name); // Send the document name to RabbitMQ
-                    return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto); // Return 201 Created
+                    _logger.LogInformation("Document created successfully with ID {DocumentId}.", resultItem.Id);
+                    _messageQueueService.SendToQueue($"{resultItem.Id}"); // Send the document Id to RabbitMQ for OcrWorker
+                    return CreatedAtAction(nameof(GetDocument), new { id = resultItem.Id }, resultItem); // Return 201 Created
                 }
 
                 // Log validation failure
-                _logger.LogWarning("Document validation failed: {Message}", result.Message);
-                return StatusCode(400, result.Message); // Return 400 Bad Request
+                _logger.LogWarning("Document validation failed");
+                return StatusCode(400); // Return 400 Bad Request
             }
             catch (RabbitMQClientException ex)
             {
@@ -194,6 +169,38 @@ namespace DocumentManagementSystem.Controllers
                 }
 
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to document
+                var response = await _documentService.UpdateDocumentAsync(id, document); // Update document via service
+
+                if (response.Success)
+                {
+                    return NoContent(); // Return 204 No Content
+                }
+
+                return StatusCode(400, response.Message); // Return 400 Bad Request
+            }
+            catch (Exception ex)
+            {
+                // Log errors during document update
+                _logger.LogError("An error occurred while creating the document: {Exception}", ex);
+                return StatusCode(500, $"An internal server error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPut("/ocrText/{id}")]
+        public async Task<IActionResult> PutDocumentWithText(int id, Document document)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState); // Return 400 for invalid model state
+                }
+
+                if (id != document.Id)
+                {
+                    return BadRequest("ID mismatch"); // Ensure ID matches
+                }
+
                 var response = await _documentService.UpdateDocumentAsync(id, document); // Update document via service
 
                 if (response.Success)

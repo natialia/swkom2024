@@ -18,6 +18,8 @@ namespace DocumentManagementSystem.Mappings
                     => opt.MapFrom(src => src.FileType))
                 .ForMember(dest => dest.FileSize, opt
                     => opt.MapFrom(src => src.FileSize))
+                .ForMember(dest => dest.OcrText, opt
+                    => opt.MapFrom(src => src.OcrText))
                 .ReverseMap()
                 .ForMember(dest => dest.Id, opt
                     => opt.MapFrom(src => src.Id))
@@ -26,7 +28,9 @@ namespace DocumentManagementSystem.Mappings
                 .ForMember(dest => dest.FileType, opt
                     => opt.MapFrom(src => src.FileType))
                 .ForMember(dest => dest.FileSize, opt
-                    => opt.MapFrom(src => src.FileSize));
+                    => opt.MapFrom(src => src.FileSize))
+                .ForMember(dest => dest.OcrText, opt
+                    => opt.MapFrom(src => src.OcrText));
 
             CreateMap<DocumentDTO, Document>()
                  .ForMember(dest => dest.Id, opt
@@ -37,6 +41,8 @@ namespace DocumentManagementSystem.Mappings
                     => opt.MapFrom(src => src.FileType))
                 .ForMember(dest => dest.FileSize, opt
                     => opt.MapFrom(src => src.FileSize))
+                .ForMember(dest => dest.OcrText, opt
+                    => opt.MapFrom(src => src.OcrText))
                 .ReverseMap()
                 .ForMember(dest => dest.Id, opt
                     => opt.MapFrom(src => src.Id))
@@ -45,7 +51,9 @@ namespace DocumentManagementSystem.Mappings
                 .ForMember(dest => dest.FileType, opt
                     => opt.MapFrom(src => src.FileType))
                 .ForMember(dest => dest.FileSize, opt
-                    => opt.MapFrom(src => src.FileSize));
+                    => opt.MapFrom(src => src.FileSize))
+                .ForMember(dest => dest.OcrText, opt
+                    => opt.MapFrom(src => src.OcrText));
 
             CreateMap<Document, DocumentItem>()
                  .ForMember(dest => dest.Id, opt
@@ -56,6 +64,8 @@ namespace DocumentManagementSystem.Mappings
                     => opt.MapFrom(src => src.FileType))
                 .ForMember(dest => dest.FileSize, opt
                     => opt.MapFrom(src => src.FileSize))
+                .ForMember(dest => dest.OcrText, opt
+                    => opt.MapFrom(src => src.OcrText))
                 .ReverseMap()
                 .ForMember(dest => dest.Id, opt
                     => opt.MapFrom(src => src.Id))
@@ -64,7 +74,9 @@ namespace DocumentManagementSystem.Mappings
                 .ForMember(dest => dest.FileType, opt
                     => opt.MapFrom(src => src.FileType))
                 .ForMember(dest => dest.FileSize, opt
-                    => opt.MapFrom(src => src.FileSize));
+                    => opt.MapFrom(src => src.FileSize))
+                .ForMember(dest => dest.OcrText, opt
+                    => opt.MapFrom(src => src.OcrText));
         }
     }
 }
