@@ -6,9 +6,11 @@ using dms_bl.Models;
 using RabbitMQ.Client;
 using System.Text;
 using RabbitMQ.Client.Exceptions;
+using Minio;
 using DocumentManagementSystem.Exceptions;
 using DocumentManagementSystem.Exceptions.Messaging;
 using dms_api.DTOs;
+using Minio.DataModel.Args;
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -20,6 +22,7 @@ namespace DocumentManagementSystem.Controllers
         private readonly ILogger<DocumentController> _logger; // For logging
         private readonly IDocumentLogic _documentService; // Service for document operations
         private readonly IMessageQueueService _messageQueueService;
+        private readonly IMinioClient _minioClient; // Client for file storage
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
 
@@ -30,12 +33,13 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
         /// /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService)
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, IMinioClient minioClient)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
+            _minioClient = minioClient;
         }
 
         /// <summary>
@@ -126,6 +130,20 @@ namespace DocumentManagementSystem.Controllers
                     // Log success and send message to RabbitMQ
                     _logger.LogInformation("Document created successfully with ID {DocumentId}.", resultItem.Id);
                     _messageQueueService.SendToQueue($"{resultItem.Id}"); // Send the document Id to RabbitMQ for OcrWorker
+
+                    //Upload file to bucket
+                    var objectName = $"{resultItem.Id}/{uploadedDocument.FileName}";
+                    using(var stream = uploadedDocument.OpenReadStream())
+                    {
+                        await _minioClient.PutObjectAsync(new PutObjectArgs()
+                            .WithBucket("documents")
+                            .WithObject(objectName)
+                            .WithStreamData(stream)
+                            .WithObjectSize(uploadedDocument.Length)
+                            .WithContentType(uploadedDocument.ContentType));
+                        _logger.LogInformation("DOCUMENT UPLOADED TO FILE STORAGE!!!!!!");
+                    }
+
                     return CreatedAtAction(nameof(GetDocument), new { id = resultItem.Id }, resultItem); // Return 201 Created
                 }
 

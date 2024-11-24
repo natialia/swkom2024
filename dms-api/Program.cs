@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using dms_dal_new.Repositories;
 using Npgsql;
 using dms_bl.Validators;
+using Minio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,10 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); //everyth
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 builder.Services.AddScoped<IMessageQueueService, MessageQueueService>(); // should all use same queueservice
 builder.Services.AddHostedService<RabbitMqListenerService>();  //Have queue listener run in the background to consume ocr response
+
+builder.Services.AddMinio("fGG2X7TiDNiTJevZqIXr", "HkbLt9NTt9h2RQWA5QKxO8QFpkWmpLFTPjdxVsVV"); //Add file storage as dependency
+builder.Services.AddMinio(configureClient => configureClient.WithEndpoint("localhost", 9000)
+    .WithCredentials("fGG2X7TiDNiTJevZqIXr", "HkbLt9NTt9h2RQWA5QKxO8QFpkWmpLFTPjdxVsVV").Build()); //TODO: check why storing file doesnt work
 
 // CORS Configuration
 builder.Services.AddCors(options =>
