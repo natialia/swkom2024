@@ -48,7 +48,7 @@ services:
     container_name: rabbitmq
     ports:
       - "5672:5672"
-      - "9093:9093"
+      - "15672:15672"
     volumes:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     environment:
@@ -56,6 +56,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=password
 
   ocr-worker:
+    image: ocr-worker-image
     build:
       context: ./ocr-worker
     container_name: ocr-worker

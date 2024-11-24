@@ -22,11 +22,21 @@
 
   <ItemGroup>
     <ProjectReference Include="..\dms-api\dms-api.csproj" />
+    <ProjectReference Include="..\ocr-worker\ocr-worker.csproj" />
     <ProjectReference Include="..\web-ui\web-ui.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestData\Test.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\Test.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

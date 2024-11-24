@@ -27,7 +27,8 @@ namespace dms_bl.Services
             StartListening();
             return Task.CompletedTask;
         }
-        //with httpclient, because a hosted service cannot have scoped services (document logic, repository...) injected
+
+        // With httpclient, because a hosted service cannot have scoped services (document logic, repository...) injected
         public RabbitMqListenerService(ILogger<RabbitMqListenerService> logger, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;

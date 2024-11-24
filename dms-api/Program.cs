@@ -24,10 +24,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<DocumentValidator>();
 
 builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
-builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); //everything must be singleton so that hosted service can register dependency
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everything must be singleton, so that hosted service can register dependency
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
-builder.Services.AddScoped<IMessageQueueService, MessageQueueService>(); // should all use same queueservice
-builder.Services.AddHostedService<RabbitMqListenerService>();  //Have queue listener run in the background to consume ocr response
 
 // CORS Configuration
 builder.Services.AddCors(options =>
@@ -42,11 +40,17 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Registriere HttpClient für rabbitmqlistener
+// Register HttpClient for rabbitmqlistener
 builder.Services.AddHttpClient("dms-api", client =>
 {
     client.BaseAddress = new Uri("http://dms-api:8081"); // URL des api Services in Docker
 });
+
+// Add RabbitMQ Background Service
+builder.Services.AddControllers();
+builder.Services.AddSingleton<IMessageQueueService, MessageQueueService>(); // Should all use same queueservice
+builder.Services.AddHostedService<RabbitMqListenerService>(); // Have queue listener run in the background to consume ocr response
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
