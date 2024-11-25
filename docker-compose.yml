@@ -48,12 +48,38 @@ services:
     container_name: rabbitmq
     ports:
       - "5672:5672"
-      - "9093:9093"
+      - "15672:15672"
     volumes:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     environment:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
 
+  ocr-worker:
+    image: ocr-worker-image
+    build:
+      context: ./ocr-worker
+    container_name: ocr-worker
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./ocr-worker/tessdata:/app/tessdata
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    command: server /data --console-address ":9090"
+    environment:
+      - MINIO_ROOT_USER=user
+      - MINIO_ROOT_PASSWORD=password
+    volumes:
+      - minio_data:/data
+    ports:
+      - 9000:9000
+      - 9090:9090
+
 volumes:
   postgres_data:  # This defines the volume
+  minio_data:

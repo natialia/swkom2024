@@ -8,7 +8,9 @@ namespace DocumentManagementSystem.DTOs
         {
             RuleFor(x => x.Name)
                .NotEmpty().WithMessage("The name cannot be empty.")
-               .MaximumLength(100).WithMessage("The name must not exceed 100 characters.");
+               .MaximumLength(255).WithMessage("The name must not exceed 255 characters.")
+               .Must(fileName => fileName == null || fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+               .WithMessage("Only PDF files are allowed.");
         }
     }
 }

@@ -8,7 +8,7 @@ namespace dms_dal_new.Entities
 {
     public class DocumentItem
     {
-        // Parameterless constructor
+        // Parameterless constructor for tests
         public DocumentItem() { }
 
         // Constructor with 'id'

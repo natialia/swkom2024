@@ -24,8 +24,11 @@ namespace dms_dal_new.Data
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(100);  // Configures the "Name"-Columns
+
+                entity.Property(e => e.OcrText)
+                   .HasMaxLength(-1);
             });
-            modelBuilder.Entity<DocumentItem>().HasData(new DocumentItem(1) { Name = "first", FileType = "application/pdf", FileSize="400kB" });
+            //modelBuilder.Entity<DocumentItem>().HasData(new DocumentItem(1) { Name = "first", FileType = "application/pdf", FileSize="400kB" });
             base.OnModelCreating(modelBuilder);
         }
     }
