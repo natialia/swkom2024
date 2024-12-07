@@ -78,7 +78,7 @@ namespace dms_bl.Services
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
-                    var parts = message.Split('^'); //TODO: CHECK IF THERES A BETTER WAY THAN splitting with ^
+                    var parts = message.Split(new[] { '|' }, 2); //TODO: CHECK IF THERES A BETTER WAY THAN splitting with ^
                     _logger.LogInformation($"Received message: {message}");
 
                     if (parts.Length == 2)

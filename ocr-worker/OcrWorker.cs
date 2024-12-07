@@ -138,7 +138,7 @@ namespace ocr_worker
                     if (!string.IsNullOrEmpty(extractedText))
                     {
                         // Send OCR result back to RabbitMQ
-                        var resultBody = Encoding.UTF8.GetBytes($"{id}^{extractedText}");
+                        var resultBody = Encoding.UTF8.GetBytes($"{id}|{extractedText}");
                         _channel.BasicPublish(exchange: "", routingKey: "ocr_result_queue", basicProperties: null, body: resultBody);
                         Console.WriteLine($"[x] Sent OCR result for ID: {id}");
                     }
