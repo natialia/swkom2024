@@ -144,7 +144,7 @@ namespace DocumentManagementSystem.Controllers
                         .WithObjectSize(uploadedDocument.Length));
                     // Log success and send message to RabbitMQ
                     _logger.LogInformation("Document created successfully with ID {DocumentId}.", resultItem.Id);
-                    _messageQueueService.SendToQueue($"{resultItem.Id}"); // Send the document Id to RabbitMQ for OcrWorker
+                    _messageQueueService.SendToQueue($"{resultItem.Id}|{fileName}"); // Send the document Id to RabbitMQ for OcrWorker
                     return CreatedAtAction(nameof(GetDocument), new { id = resultItem.Id }, resultItem); // Return 201 Created
                 }
 

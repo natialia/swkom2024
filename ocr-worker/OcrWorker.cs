@@ -8,6 +8,8 @@ using Tesseract;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Minio;
+using Minio.DataModel.Args;
 
 [assembly: InternalsVisibleTo("DocumentManagementSystem.Tests")]
 
@@ -17,6 +19,8 @@ namespace ocr_worker
     {
         private IConnection _connection;
         private IModel _channel;
+        private readonly IMinioClient _minioClient;
+        private const string BucketName = "files";
 
         // Dependency Injection Constructor
         public OcrWorker(IConnection connection = null, IModel channel = null)
@@ -35,6 +39,12 @@ namespace ocr_worker
             {
                 throw new InvalidOperationException("RabbitMQ channel is not initialized.");
             }
+
+            _minioClient = new MinioClient()
+                .WithEndpoint("minio", 9000)
+                .WithCredentials("minioadmin", "minioadmin")
+                .WithSSL(false)
+                .Build();
         }
 
         // Private Constructor to Initialize and Connect to RabbitMQ
@@ -77,27 +87,54 @@ namespace ocr_worker
         public void Start()
         {
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                var parts = message.Split('|');
-
-                if (parts.Length == 2)
+                try
                 {
-                    var id = parts[0];
-                    var filePath = parts[1];
-                    Console.WriteLine($"[x] Received ID: {id}, FilePath: {filePath}");
+                    await HandleMessageAsync(ea);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing message: {ex.Message}");
+                }
+            };
 
-                    // Validate that the file exists
-                    if (!File.Exists(filePath))
-                    {
-                        Console.WriteLine($"Error: File {filePath} not found.");
-                        return;
-                    }
+            if (_channel == null)
+            {
+                throw new InvalidOperationException("RabbitMQ channel is not initialized.");
+            }
+
+            _channel.BasicConsume(queue: "document_queue", autoAck: true, consumer: consumer);
+        }
+
+        private async Task HandleMessageAsync(BasicDeliverEventArgs ea)
+        {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            var parts = message.Split('|');
+
+            if (parts.Length == 2)
+            {
+                var id = parts[0];
+                var fileName = parts[1];
+                Console.WriteLine($"[x] Received ID: {id}, FilePath: {fileName}");
+
+                using (var memoryStream = new MemoryStream())
+                {
+                    await _minioClient.GetObjectAsync(new GetObjectArgs()
+                        .WithBucket(BucketName)
+                        .WithObject(fileName)
+                        .WithCallbackStream(stream =>
+                        {
+                            stream.CopyTo(memoryStream);
+                        }));
+                    Console.WriteLine("LENGTH OF MEMORYSTREAM: " + memoryStream.Length);
+
+                    memoryStream.Position = 0;
+                    Console.WriteLine("LENGTH OF MEMORYSTREAM AFTER POSITION: "+memoryStream.Length);
 
                     // Perform OCR on the document
-                    var extractedText = PerformOcr(filePath);
+                    var extractedText = PerformOcr(memoryStream);
                     if (!string.IsNullOrEmpty(extractedText))
                     {
                         // Send OCR result back to RabbitMQ
@@ -110,33 +147,29 @@ namespace ocr_worker
                         Console.WriteLine("Error: Extracted text is null or empty.");
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Error: Invalid message received, split less than 2 parts.");
-                }
-            };
-            if (_channel == null)
-            {
-                throw new InvalidOperationException("RabbitMQ channel is not initialized.");
             }
-            _channel.BasicConsume(queue: "document_queue", autoAck: true, consumer: consumer);
+            else
+            {
+                Console.WriteLine("Error: Invalid message received, split less than 2 parts.");
+            }
         }
 
+
         // Internal method for OCR processing (so it can be tested)
-        internal string PerformOcr(string filePath)
+        internal string PerformOcr(Stream fileStream)
         {
-            Console.WriteLine($"Attempting OCR on file: {filePath}");
+            Console.WriteLine("Attempting OCR on the provided stream. Length: "+fileStream.Length);
             var stringBuilder = new StringBuilder();
 
             try
             {
-                using (var images = new MagickImageCollection(filePath)) // MagickImageCollection for multiple pages
+                using (var images = new MagickImageCollection(fileStream)) // MagickImageCollection for multiple pages
                 {
                     foreach (var image in images)
                     {
                         Console.WriteLine("Processing page...");
 
-                        // Convert image to PNG
+                        // Konvertieren Sie das Bild in ein temporäres PNG für Tesseract
                         var tempPngFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".png");
 
                         image.Density = new Density(300, 300); // High DPI for better OCR accuracy
