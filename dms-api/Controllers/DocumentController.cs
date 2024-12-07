@@ -9,6 +9,8 @@ using RabbitMQ.Client.Exceptions;
 using DocumentManagementSystem.Exceptions;
 using DocumentManagementSystem.Exceptions.Messaging;
 using dms_api.DTOs;
+using Minio;
+using Minio.DataModel.Args;
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -22,6 +24,8 @@ namespace DocumentManagementSystem.Controllers
         private readonly IMessageQueueService _messageQueueService;
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
+        private readonly IMinioClient _minioClient;
+        private const string BucketName = "files";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentController"/> class.
@@ -36,6 +40,11 @@ namespace DocumentManagementSystem.Controllers
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
+            _minioClient = new MinioClient()
+                .WithEndpoint("minio", 9000)
+                .WithCredentials("minioadmin", "minioadmin")
+                .WithSSL(false)
+                .Build();
         }
 
         /// <summary>
@@ -123,6 +132,16 @@ namespace DocumentManagementSystem.Controllers
 
                 if (resultItem != null)
                 {
+                    await EnsureBucketExists();
+
+                    var fileName = Path.GetFileName(uploadedDocument.FileName);
+                    await using var fileStream = uploadedDocument.OpenReadStream();
+
+                    await _minioClient.PutObjectAsync(new PutObjectArgs()
+                        .WithBucket(BucketName)
+                        .WithObject(fileName)
+                        .WithStreamData(fileStream)
+                        .WithObjectSize(uploadedDocument.Length));
                     // Log success and send message to RabbitMQ
                     _logger.LogInformation("Document created successfully with ID {DocumentId}.", resultItem.Id);
                     _messageQueueService.SendToQueue($"{resultItem.Id}"); // Send the document Id to RabbitMQ for OcrWorker
@@ -146,6 +165,18 @@ namespace DocumentManagementSystem.Controllers
                 return StatusCode(500, $"An internal server error occurred: {ex.Message}");
             }
         }
+
+        private async Task EnsureBucketExists()
+        {
+            _logger.LogInformation($"Looking for bucket {BucketName} ...");
+            bool found = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(BucketName));
+            if (!found)
+            {
+                _logger.LogInformation($"Bucket {BucketName} not found, now creating new Bucket");
+                await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(BucketName));
+            }
+        }
+
 
         /// <summary>
         /// Updates an existing document.
