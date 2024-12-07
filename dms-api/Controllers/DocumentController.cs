@@ -217,18 +217,20 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
-        [HttpPut("/ocrText/{id}")]
+        [HttpPut("ocrText/{id}")]
         public async Task<IActionResult> PutDocumentWithText(int id, Document document)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Model state for ocr Update is invalid");
                     return BadRequest(ModelState); // Return 400 for invalid model state
                 }
 
                 if (id != document.Id)
                 {
+                    _logger.LogWarning("IDs do not match: sent id "+id+", document id: "+document.Id);
                     return BadRequest("ID mismatch"); // Ensure ID matches
                 }
 
@@ -236,9 +238,11 @@ namespace DocumentManagementSystem.Controllers
 
                 if (response.Success)
                 {
+                    _logger.LogInformation("Successfully added ocr text to document " + id);
                     return NoContent(); // Return 204 No Content
                 }
 
+                _logger.LogWarning("Ocr update was not possible: " + response.Message);
                 return StatusCode(400, response.Message); // Return 400 Bad Request
             }
             catch (Exception ex)
