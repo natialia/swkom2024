@@ -18,33 +18,29 @@ async function getDocuments() {
 }
 
 // Search for documents based on a search term
-async function searchDocuments() {
-    const searchTerm = document.getElementById('searchInput').value.trim();
-    if (!searchTerm) {
-        alert('Please enter a search term!');
-        return;
-    }
-
+async function searchDocuments(searchTerm) {
     try {
-        const response = await fetch("http://localhost:8081/document/search/querystring", {
-            method: "POST",
-            body: JSON.stringify("searchTerm"),
-            headers: { "Content-Type": "application/json" },
+        const response = await fetch('http://localhost:8081/document/search/querystring', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(searchTerm),
         });
 
-
-        if (response.ok) {
-            const documents = await response.json(); // Get the search results
-            displayDocuments(documents); // Display the search results
-        } else {
-            console.error('Search failed:', response.statusText);
-            alert('Search failed. Please try again later.');
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('Search failed:', error.message, error.details);
+            alert(`Search failed: ${error.message}`);
+            return;
         }
+
+        const data = await response.json();
+        displayDocuments(data);
     } catch (error) {
         console.error('Error searching documents:', error);
-        alert('An error occurred while searching for documents.');
+        alert('An unexpected error occurred.');
     }
 }
+
 
 // Display the list of documents
 function displayDocuments(documents) {

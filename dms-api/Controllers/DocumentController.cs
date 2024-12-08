@@ -161,6 +161,13 @@ namespace DocumentManagementSystem.Controllers
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to Document entity
                 var resultItem = await _documentService.AddDocumentAsync(document); // Add document via service
 
+                var indexResponse = await _elasticClient.IndexAsync(document, i => i.Index("documents"));
+                if (indexResponse.IsValidResponse)
+                {
+                    return Ok(new { message = "Document indexed successfully" });
+                }
+
+
                 if (resultItem != null)
                 {
                     await EnsureBucketExists();
@@ -334,19 +341,19 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="searchTerm">The term to search for.</param>
         /// <returns>A list of matching documents.</returns>
         [HttpPost("search/querystring")]
-        [HttpPost("search/querystring")]
         public async Task<IActionResult> SearchByQueryString([FromBody] string searchTerm)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(searchTerm))
                 {
+                    _logger.LogWarning("Search term is empty.");
                     return BadRequest(new { message = "Search term cannot be empty" });
                 }
 
                 var response = await _elasticClient.SearchAsync<Document>(s => s
                     .Index("documents")
-                    .Query(q => q.QueryString(qs => qs.Query($"*{searchTerm}*").Fields("OcrText")))); // Ensure the field matches your mapping
+                    .Query(q => q.QueryString(qs => qs.Query($"*{searchTerm}*"))));
 
                 if (!response.IsValidResponse)
                 {
@@ -356,17 +363,21 @@ namespace DocumentManagementSystem.Controllers
 
                 if (!response.Documents.Any())
                 {
-                    return NotFound(new { message = "No documents found for the given search term." });
+                    _logger.LogInformation("No documents found for search term: {SearchTerm}", searchTerm);
+                    return NotFound(new { message = "No documents found matching the search term." });
                 }
 
+                _logger.LogInformation("Search successful for term: {SearchTerm}", searchTerm);
                 return Ok(response.Documents);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error while searching documents: {Exception}", ex);
-                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+                _logger.LogError("Unhandled exception in SearchByQueryString: {Exception}", ex);
+                return StatusCode(500, new { message = "Internal Server Error", details = ex.Message });
             }
         }
+
+        // For test purposes
         [HttpGet("search/querystring")]
         public async Task<IActionResult> SearchByQueryStringGet(string searchTerm)
         {

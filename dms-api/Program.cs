@@ -30,7 +30,7 @@ builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
 //ElasticSearch
 var elasticUri = builder.Configuration.GetConnectionString("ElasticSearch") ?? "http://localhost:9200";
-var settings = new ElasticsearchClientSettings(new Uri(elasticUri));
+var settings = new ElasticsearchClientSettings(new Uri(elasticUri)).EnableDebugMode();
 var elasticClient = new ElasticsearchClient(settings);
 builder.Services.AddSingleton(elasticClient);
 
@@ -38,13 +38,12 @@ builder.Services.AddSingleton(elasticClient);
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins("http://localhost")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()); // Include this if credentials (cookies) are required
 });
-
-
 
 // Register HttpClient for rabbitmqlistener
 builder.Services.AddHttpClient("dms-api", client =>
