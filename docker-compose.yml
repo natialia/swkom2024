@@ -9,12 +9,17 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     restart: always
     depends_on:
-       rabbitmq:
+      rabbitmq:
         condition: service_healthy
-       db:
+      db:
         condition: service_started
+      elasticsearch:
+        condition: service_started
+    networks:
+      - elastic
 
   webui:
     image: web-ui-image
@@ -31,6 +36,8 @@ services:
         condition: service_healthy
       dms-api:
         condition: service_started
+    networks:
+      - elastic
 
   db:
     image: postgres
@@ -47,6 +54,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - elastic
 
   rabbitmq:
     image: rabbitmq:management
@@ -56,14 +65,16 @@ services:
       - "9093:9093"
     volumes:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-    environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
       timeout: 30s
       retries: 3
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    networks:
+      - elastic
 
   ocr-worker:
     image: ocr-worker-image
@@ -77,6 +88,8 @@ services:
       - ./ocr-worker/tessdata:/app/tessdata
     environment:
       - RABBITMQ_HOST=rabbitmq
+    networks:
+      - elastic
 
   minio:
     image: minio/minio
@@ -90,7 +103,46 @@ services:
     command: server /data --console-address ":9090"
     volumes:
       - minio-data:/data
+    networks:
+      - elastic
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.1
+    container_name: elasticsearch
+    environment:
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"  # Reduced memory allocation
+      - "bootstrap.memory_lock=true"  # Prevents memory swapping
+      - "ELASTIC_PASSWORD=password"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.16.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_started
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - elastic
 
 volumes:
-  postgres_data:  # This defines the volume
+  postgres_data:
   minio-data:
+  elasticsearch-data:
+
+networks:
+  elastic:
+    driver: bridge
