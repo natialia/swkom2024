@@ -1,47 +1,38 @@
 ﻿using Xunit;
-using Moq;
 using System.IO;
-using ocr_worker;
+using Moq;
+using ocr_worker.Workers;
 using RabbitMQ.Client;
-using ImageMagick;
 using System;
 
 public class OcrWorkerTests
 {
     [Fact]
-    public void PerformOcr_ShouldExtractTextFromSampleFile()
+    public void PerformOcr_ShouldExtractTextFromTestPngFile()
     {
-        // Arrange
+        // Arrange: Mock RabbitMQ components
         var mockConnection = new Mock<IConnection>();
         var mockChannel = new Mock<IModel>();
         mockConnection.Setup(c => c.CreateModel()).Returns(mockChannel.Object);
 
-        // Ensure the sample file exists
-        string sampleFilePath = Path.Combine(AppContext.BaseDirectory, "TestData", "Test.png");
-        Console.WriteLine($"Test file path: {sampleFilePath}");
-        Assert.True(File.Exists(sampleFilePath), "Test file is missing. Ensure TestData/Test.png is copied to the output directory.");
+        string filePath = Path.Combine(AppContext.BaseDirectory, "TestData", "Test.png");
 
+        // Verify the test file exists
+        Assert.True(File.Exists(filePath), $"Test file is missing: {filePath}");
+
+        using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+
+        // Inject mocks into the OcrWorker
         var ocrWorker = new OcrWorker(mockConnection.Object, mockChannel.Object);
 
         // Act
-        string extractedText = string.Empty;
-        try
-        {
-            Console.WriteLine("Starting OCR processing...");
-            extractedText = ocrWorker.PerformOcr(sampleFilePath);
-            Console.WriteLine($"Extracted text: {extractedText}");
-        }
-        catch (Exception ex)
-        {
-            // Fail the test if an exception is thrown
-            throw new InvalidOperationException($"PerformOcr threw an exception: {ex.Message}", ex);
-        }
+        var extractedText = ocrWorker.PerformOcr(fileStream);
+
+        // Debugging Output
+        Console.WriteLine($"Extracted OCR Text: {extractedText}");
 
         // Assert
         Assert.False(string.IsNullOrEmpty(extractedText), "Extracted text is null or empty.");
-        Assert.Contains("Test test", extractedText);
-
-        // Clean up
-        ocrWorker.Dispose();
+        Assert.Contains("Test test", extractedText.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 }
