@@ -217,6 +217,21 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        [HttpGet("ocrText/{id}")]
+        public async Task<IActionResult> GetTextOfDocument(int id)
+        {
+
+            var resultDocument = await _documentService.GetDocumentByIdAsync(id);
+            if(resultDocument != null)
+            {
+                _logger.LogWarning($"Document with Id {id} found. Getting OCR Text");
+                return StatusCode(200, resultDocument.OcrText);
+            }
+
+            _logger.LogWarning($"Document with Id {id} not found.");
+            return StatusCode(400);
+        }
+
         [HttpPut("ocrText/{id}")]
         public async Task<IActionResult> PutDocumentWithText(int id, Document document)
         {
