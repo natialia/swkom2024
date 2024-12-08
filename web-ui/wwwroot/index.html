@@ -31,6 +31,16 @@
             margin-bottom: 15px; /* Space below the button */
         }
 
+        .custom-search-input {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: 2px solid #C71585;
+            border-radius: 25px;
+            background-color: white; /* Background color for custom button */
+            margin-bottom: 15px; /* Space below the button */
+        }
+
         button {
             padding: 10px 15px;
             font-size: 14px;
@@ -82,6 +92,10 @@
         <h3>Paperless Frontend</h3>
         <button onclick="getDocuments()">Get All Documents</button>
         <div id="output"></div>
+        <div id="search">
+            <input class="custom-search-input" type="text" id="searchInput" placeholder="Enter search term" />
+            <button id="searchButton">Search</button>
+        </div>
     </div>
     <div>
         <h3>Document Upload</h3>

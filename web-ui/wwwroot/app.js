@@ -2,9 +2,48 @@
 
 // Fetch and display documents
 async function getDocuments() {
-    const response = await fetch(`${apiUrl}`);
-    const documents = await response.json(); // Get the JSON response
-    displayDocuments(documents); // Display documents
+    try {
+        const response = await fetch(`${apiUrl}`);
+        if (response.ok) {
+            const documents = await response.json(); // Get the JSON response
+            displayDocuments(documents); // Display documents
+        } else {
+            console.error('Failed to fetch documents:', response.statusText);
+            alert('Failed to load documents. Please try again later.');
+        }
+    } catch (error) {
+        console.error('Error fetching documents:', error);
+        alert('An error occurred while fetching the documents.');
+    }
+}
+
+// Search for documents based on a search term
+async function searchDocuments() {
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    if (!searchTerm) {
+        alert('Please enter a search term!');
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:8081/document/search/querystring", {
+            method: "POST",
+            body: JSON.stringify("searchTerm"),
+            headers: { "Content-Type": "application/json" },
+        });
+
+
+        if (response.ok) {
+            const documents = await response.json(); // Get the search results
+            displayDocuments(documents); // Display the search results
+        } else {
+            console.error('Search failed:', response.statusText);
+            alert('Search failed. Please try again later.');
+        }
+    } catch (error) {
+        console.error('Error searching documents:', error);
+        alert('An error occurred while searching for documents.');
+    }
 }
 
 // Display the list of documents
@@ -51,24 +90,23 @@ function displayDocuments(documents) {
     });
 }
 
-
+// Fetch OCR text for a document
 async function fetchDocumentText(id, listItem) {
     try {
-        //check if text is already shown
+        // Check if text is already shown
         let existingTextElement = listItem.querySelector('.ocr-text');
         if (existingTextElement) {
 
             existingTextElement.remove();
-            return;//text already exists: remo´ve it
+            return;// Text already exists: remove it
         }
 
-        //no text yet: get ocr text from apu
         const response = await fetch(`${apiUrl}/ocrText/${id}`);
         if (response.ok) {
-            const ocrText = await response.text(); //get ocr text
+            const ocrText = await response.text(); // Get ocr text
             const textElement = document.createElement('p');
             textElement.textContent = `OCR Text: ${ocrText}`;
-            textElement.classList.add('ocr-text'); //class to identify
+            textElement.classList.add('ocr-text'); // Class to identify
             textElement.style.marginTop = '10px';
             textElement.style.color = '#333';
             listItem.appendChild(textElement);
@@ -83,14 +121,19 @@ async function fetchDocumentText(id, listItem) {
 
 // Delete a document by its ID
 async function deleteDocument(id) {
-    const response = await fetch(`${apiUrl}/${id}`, {
-        method: 'DELETE'
-    });
+    try {
+        const response = await fetch(`${apiUrl}/${id}`, {
+            method: 'DELETE',
+        });
 
-    if (response.ok) {
-        getDocuments(); // Refresh the document list after deletion
-    } else {
-        alert('Failed to delete the document.');
+        if (response.ok) {
+            getDocuments(); // Refresh the document list after deletion
+        } else {
+            alert('Failed to delete the document.');
+        }
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('An error occurred while deleting the document.');
     }
 }
 
@@ -144,4 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
             responseDiv.innerHTML = `<span class="error">An error occurred while uploading the file.</span>`;
         }
     });
+    // Attach search button event
+    searchButton.addEventListener('click', searchDocuments);
 });

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using dms_dal_new.Repositories;
 using Npgsql;
 using dms_bl.Validators;
+using Elastic.Clients.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,18 +28,23 @@ options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase"))
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everything must be singleton, so that hosted service can register dependency
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
+//ElasticSearch
+var elasticUri = builder.Configuration.GetConnectionString("ElasticSearch") ?? "http://localhost:9200";
+var settings = new ElasticsearchClientSettings(new Uri(elasticUri));
+var elasticClient = new ElasticsearchClient(settings);
+builder.Services.AddSingleton(elasticClient);
+
+
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowWebUI",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost")
-                .AllowAnyHeader()
-                .AllowAnyOrigin()
-                .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowFrontend",
+        policy => policy.WithOrigins("http://localhost")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
 });
+
+
 
 // Register HttpClient for rabbitmqlistener
 builder.Services.AddHttpClient("dms-api", client =>
@@ -110,7 +116,7 @@ app.UseSwaggerUI(c =>
 });
 
 // CORS-Policy
-app.UseCors("AllowWebUI");
+app.UseCors("AllowFrontend");
 
 //app.UseHttpsRedirection();
 

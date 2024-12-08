@@ -11,6 +11,9 @@ using DocumentManagementSystem.Exceptions.Messaging;
 using dms_api.DTOs;
 using Minio;
 using Minio.DataModel.Args;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Mapping;
+
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -24,8 +27,9 @@ namespace DocumentManagementSystem.Controllers
         private readonly IMessageQueueService _messageQueueService;
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
-        private readonly IMinioClient _minioClient;
+        private readonly IMinioClient _minioClient; // Minio
         private const string BucketName = "files";
+        private readonly ElasticsearchClient _elasticClient; // ElasticSearch
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentController"/> class.
@@ -34,12 +38,13 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
         /// /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService)
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, ElasticsearchClient elasticClient)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
+            _elasticClient = elasticClient;
             _minioClient = new MinioClient()
                 .WithEndpoint("minio", 9000)
                 .WithCredentials("minioadmin", "minioadmin")
@@ -102,6 +107,32 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        //// Create Index for ElasticSearch
+        //private async Task EnsureIndexExists()
+        //{
+        //    var existsResponse = await _elasticClient.Indices.ExistsAsync("documents");
+        //    if (!existsResponse.Exists)
+        //    {
+        //        var createIndexResponse = await _elasticClient.Indices.CreateAsync("documents", c => c
+        //            .Mappings(m => m
+        //                .Properties(p =>
+        //                {
+        //                    p.Text(t => t.Name("Name"));        // Define Name as a full-text searchable field
+        //                    p.Keyword(k => k.Name("FileType")); // Define FileType as a keyword for exact match
+        //                    p.Keyword(k => k.Name("FileSize")); // Define FileSize as a keyword for exact match
+        //                    p.Text(t => t.Name("OcrText"));     // Define OcrText as a full-text searchable field
+        //                })
+        //            )
+        //        );
+
+        //        if (!createIndexResponse.IsValidResponse)
+        //        {
+        //            throw new Exception($"Failed to create index: {createIndexResponse.DebugInformation}");
+        //        }
+        //    }
+        //}
+
+
         /// <summary>
         /// Creates a new document.
         /// </summary>
@@ -119,7 +150,7 @@ namespace DocumentManagementSystem.Controllers
                     Id = request.Id,
                     Name = request.Name,
                     FileType = request.FileType,
-                    FileSize = request.FileSize
+                    OcrText = request.OcrText
                 };
 
                 if (uploadedDocument == null || uploadedDocument.Length == 0) //Receive uploaded file: use for document storage later
@@ -297,8 +328,87 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
-        ///
+        /// <summary>
+        /// Searches documents by query string.
+        /// </summary>
+        /// <param name="searchTerm">The term to search for.</param>
+        /// <returns>A list of matching documents.</returns>
+        [HttpPost("search/querystring")]
+        [HttpPost("search/querystring")]
+        public async Task<IActionResult> SearchByQueryString([FromBody] string searchTerm)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    return BadRequest(new { message = "Search term cannot be empty" });
+                }
 
+                var response = await _elasticClient.SearchAsync<Document>(s => s
+                    .Index("documents")
+                    .Query(q => q.QueryString(qs => qs.Query($"*{searchTerm}*").Fields("OcrText")))); // Ensure the field matches your mapping
+
+                if (!response.IsValidResponse)
+                {
+                    _logger.LogError("Elasticsearch error: {DebugInfo}", response.DebugInformation);
+                    return StatusCode(500, new { message = "Elasticsearch error", details = response.DebugInformation });
+                }
+
+                if (!response.Documents.Any())
+                {
+                    return NotFound(new { message = "No documents found for the given search term." });
+                }
+
+                return Ok(response.Documents);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error while searching documents: {Exception}", ex);
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+            }
+        }
+        [HttpGet("search/querystring")]
+        public async Task<IActionResult> SearchByQueryStringGet(string searchTerm)
+        {
+            return await SearchByQueryString(searchTerm);
+        }
+
+        /// <summary>
+        /// Searches documents by fuzzy search.
+        /// </summary>
+        /// <param name="searchTerm">The term to search for.</param>
+        /// <returns>A list of matching documents.</returns>
+        [HttpPost("search/fuzzy")]
+        public async Task<IActionResult> SearchByFuzzy([FromBody] string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return BadRequest(new { message = "Search term cannot be empty" });
+            }
+
+            var response = await _elasticClient.SearchAsync<Document>(s => s
+                .Index("documents")
+                .Query(q => q.Match(m => m
+                .Field("OcrText")
+                .Query(searchTerm)
+                .Fuzziness(new Fuzziness(4)))));
+
+            return HandleSearchResponse(response);
+        }
+
+        private IActionResult HandleSearchResponse(SearchResponse<Document> response)
+        {
+            if (response.IsValidResponse)
+            {
+                if (response.Documents.Any())
+                {
+                    return Ok(response.Documents);
+                }
+                return NotFound(new { message = "No documents found matching the search term." });
+            }
+
+            return StatusCode(500, new { message = "Failed to search documents", details = response.DebugInformation });
+        }
 
         private void SendToMessageQueue(string fileName)
         {
