@@ -91,6 +91,7 @@ namespace dms_bl.Services
                 existingItem.Name = item.Name;
                 existingItem.FileType = item.FileType;
                 existingItem.FileSize = item.FileSize;
+                existingItem.OcrText = item.OcrText;
                 await _documentRepository.UpdateAsync(existingItem);
                 return new ServiceResponse { Success = true, Message = "Successfully updated document" };
             }

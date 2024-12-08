@@ -224,7 +224,8 @@ namespace DocumentManagementSystem.Controllers
             var resultDocument = await _documentService.GetDocumentByIdAsync(id);
             if(resultDocument != null)
             {
-                _logger.LogWarning($"Document with Id {id} found. Getting OCR Text");
+                _logger.LogInformation($"Document with Id {id} found. Getting OCR Text");
+                _logger.LogInformation($"OCR text is: {resultDocument.OcrText}");
                 return StatusCode(200, resultDocument.OcrText);
             }
 

@@ -108,18 +108,63 @@
 
             documents.forEach(doc => {
                 const listItem = document.createElement('div');
-                listItem.classList.add('document-item'); // Add a class for styling
+                listItem.classList.add('document-item');
 
-                // Create a formatted display
+                // create a nice and formatted display
                 listItem.innerHTML = `
-                        <strong>${doc.name}</strong><br>
-                        <span class="file-info">Type: ${doc.fileType}</span>
-                        <span class="file-info">Size: ${doc.fileSize}</span>
-                        <button class="delete-button" onclick="deleteDocument(${doc.id})">Delete</button>
-                    `;
+            <strong>${doc.name}</strong><br>
+            <span class="file-info">Type: ${doc.fileType}</span>
+            <span class="file-info">Size: ${doc.fileSize}</span>
+        `;
 
+                //add Delete button
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-button');
+                deleteButton.onclick = () => deleteDocument(doc.id);
+
+                //Add Show Text button
+                const textButton = document.createElement('button');
+                textButton.textContent = 'Show Text';
+                textButton.classList.add('delete-button');
+                textButton.onclick = () => fetchDocumentText(doc.id, listItem);
+
+                // append buttons to the list item
+                listItem.appendChild(deleteButton);
+                listItem.appendChild(textButton);
+
+                //Append the list item to the output
                 outputDiv.appendChild(listItem);
             });
+        }
+
+        async function fetchDocumentText(id, listItem) {
+            try {
+                //check if text is already shown
+                let existingTextElement = listItem.querySelector('.ocr-text');
+                if (existingTextElement) {
+                    
+                    existingTextElement.remove();
+                    return;//text already exists: remo´ve it
+                }
+
+                //no text yet: get ocr text from apu
+                const response = await fetch(`${apiUrl}/ocrText/${id}`);
+                if (response.ok) {
+                    const ocrText = await response.text(); //get ocr text
+                    const textElement = document.createElement('p');
+                    textElement.textContent = `OCR Text: ${ocrText}`;
+                    textElement.classList.add('ocr-text'); //class to identify
+                    textElement.style.marginTop = '10px';
+                    textElement.style.color = '#333';
+                    listItem.appendChild(textElement);
+                } else {
+                    alert('Failed to fetch OCR text.');
+                }
+            } catch (error) {
+                console.error('Error fetching OCR text:', error);
+                alert('An error occurred while fetching OCR text.');
+            }
         }
 
         // Delete a document by its ID
@@ -134,6 +179,7 @@
                 alert('Failed to delete the document.');
             }
         }
+
 
         // Upload a document when the form is submitted
         document.getElementById('uploadForm').addEventListener('submit', uploadForm);
