@@ -29,7 +29,7 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everyt
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
 //ElasticSearch
-var elasticUri = builder.Configuration.GetConnectionString("ElasticSearch") ?? "http://localhost:9200";
+var elasticUri = builder.Configuration.GetConnectionString("ElasticSearch") ?? "http://elasticsearch:9200";
 var settings = new ElasticsearchClientSettings(new Uri(elasticUri)).EnableDebugMode();
 var elasticClient = new ElasticsearchClient(settings);
 builder.Services.AddSingleton(elasticClient);

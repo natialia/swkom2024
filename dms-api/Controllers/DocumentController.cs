@@ -150,7 +150,7 @@ namespace DocumentManagementSystem.Controllers
                     Id = request.Id,
                     Name = request.Name,
                     FileType = request.FileType,
-                    OcrText = request.OcrText
+                    FileSize = request.FileSize
                 };
 
                 if (uploadedDocument == null || uploadedDocument.Length == 0) //Receive uploaded file: use for document storage later
@@ -340,8 +340,8 @@ namespace DocumentManagementSystem.Controllers
         /// </summary>
         /// <param name="searchTerm">The term to search for.</param>
         /// <returns>A list of matching documents.</returns>
-        [HttpPost("search/querystring")]
-        public async Task<IActionResult> SearchByQueryString([FromBody] string searchTerm)
+        [HttpPost("search/{searchTerm}")]
+        public async Task<IActionResult> SearchByQueryString(string searchTerm)
         {
             try
             {

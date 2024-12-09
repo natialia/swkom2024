@@ -20,10 +20,8 @@ async function getDocuments() {
 // Search for documents based on a search term
 async function searchDocuments(searchTerm) {
     try {
-        const response = await fetch('http://localhost:8081/document/search/querystring', {
+        const response = await fetch(`${apiUrl}/search/${searchTerm.text}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(searchTerm),
         });
 
         if (!response.ok) {
