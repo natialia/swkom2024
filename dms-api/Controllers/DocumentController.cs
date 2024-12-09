@@ -107,30 +107,20 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
-        //// Create Index for ElasticSearch
-        //private async Task EnsureIndexExists()
-        //{
-        //    var existsResponse = await _elasticClient.Indices.ExistsAsync("documents");
-        //    if (!existsResponse.Exists)
-        //    {
-        //        var createIndexResponse = await _elasticClient.Indices.CreateAsync("documents", c => c
-        //            .Mappings(m => m
-        //                .Properties(p =>
-        //                {
-        //                    p.Text(t => t.Name("Name"));        // Define Name as a full-text searchable field
-        //                    p.Keyword(k => k.Name("FileType")); // Define FileType as a keyword for exact match
-        //                    p.Keyword(k => k.Name("FileSize")); // Define FileSize as a keyword for exact match
-        //                    p.Text(t => t.Name("OcrText"));     // Define OcrText as a full-text searchable field
-        //                })
-        //            )
-        //        );
+        //// Create Index for ElasticSearch ctrl+U to uncomment !!
+        private async Task EnsureIndexExists()
+        {
+            var indexName = "documents";
 
-        //        if (!createIndexResponse.IsValidResponse)
-        //        {
-        //            throw new Exception($"Failed to create index: {createIndexResponse.DebugInformation}");
-        //        }
-        //    }
-        //}
+            //Check if index exists
+            var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
+
+            if (!indexExistsResponse.Exists)
+            {
+                // if index doesnt exist: create
+                await _elasticClient.Indices.CreateAsync(indexName);
+            }
+        }
 
 
         /// <summary>
@@ -160,13 +150,6 @@ namespace DocumentManagementSystem.Controllers
                 }
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to Document entity
                 var resultItem = await _documentService.AddDocumentAsync(document); // Add document via service
-
-                var indexResponse = await _elasticClient.IndexAsync(document, i => i.Index("documents"));
-                if (indexResponse.IsValidResponse)
-                {
-                    return Ok(new { message = "Document indexed successfully" });
-                }
-
 
                 if (resultItem != null)
                 {
@@ -292,8 +275,21 @@ namespace DocumentManagementSystem.Controllers
 
                 if (response.Success)
                 {
-                    _logger.LogInformation("Successfully added ocr text to document " + id);
-                    return NoContent(); // Return 204 No Content
+                    _logger.LogInformation("Successfully added OCR text to document {DocumentId}.", id);
+
+                    // index in elasticsearch when ocrtext is ready
+                    var indexResponse = await _elasticClient.IndexAsync(document, i => i.Index("documents"));
+
+                    if (indexResponse.IsValidResponse)
+                    {
+                        _logger.LogInformation("Document with ID {DocumentId} successfully indexed in Elasticsearch.", id);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to index document with ID {DocumentId}: {DebugInfo}", id, indexResponse.DebugInformation);
+                    }
+
+                    return NoContent();
                 }
 
                 _logger.LogWarning("Ocr update was not possible: " + response.Message);
