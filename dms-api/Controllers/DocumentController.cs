@@ -114,11 +114,13 @@ namespace DocumentManagementSystem.Controllers
             var indexName = "documents";
 
             //Check if index exists
+            _logger.LogInformation("Checking if index exists...");
             var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
 
             if (!indexExistsResponse.Exists)
             {
                 // if index doesnt exist: create
+                _logger.LogWarning($"Creating new index {indexName}");
                 await _elasticClient.Indices.CreateAsync(indexName);
             }
         }
