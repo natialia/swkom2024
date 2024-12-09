@@ -18,9 +18,10 @@ async function getDocuments() {
 }
 
 // Search for documents based on a search term
-async function searchDocuments(searchTerm) {
+async function searchDocuments() {
     try {
-        const response = await fetch(`${apiUrl}/search/${searchTerm.text}`, {
+        let searchTerm = document.getElementById('searchInput').value;
+        const response = await fetch(`${apiUrl}/search/${searchTerm}`, {
             method: 'POST',
         });
 

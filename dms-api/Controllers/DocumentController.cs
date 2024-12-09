@@ -50,6 +50,7 @@ namespace DocumentManagementSystem.Controllers
                 .WithCredentials("minioadmin", "minioadmin")
                 .WithSSL(false)
                 .Build();
+            Task.Run(async () => await EnsureIndexExists()); //check if index exists
         }
 
         /// <summary>
