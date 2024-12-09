@@ -13,7 +13,7 @@ using Minio.DataModel.Args;
 
 [assembly: InternalsVisibleTo("DocumentManagementSystem.Tests")]
 
-namespace ocr_worker
+namespace ocr_worker.Workers
 {
     public class OcrWorker : IDisposable
     {
@@ -131,7 +131,7 @@ namespace ocr_worker
                     Console.WriteLine("LENGTH OF MEMORYSTREAM: " + memoryStream.Length);
 
                     memoryStream.Position = 0;
-                    Console.WriteLine("LENGTH OF MEMORYSTREAM AFTER POSITION: "+memoryStream.Length);
+                    Console.WriteLine("LENGTH OF MEMORYSTREAM AFTER POSITION: " + memoryStream.Length);
 
                     // Perform OCR on the document
                     var extractedText = PerformOcr(memoryStream);
@@ -158,7 +158,7 @@ namespace ocr_worker
         // Internal method for OCR processing (so it can be tested)
         internal string PerformOcr(Stream fileStream)
         {
-            Console.WriteLine("Attempting OCR on the provided stream. Length: "+fileStream.Length);
+            Console.WriteLine("Attempting OCR on the provided stream. Length: " + fileStream.Length);
             var stringBuilder = new StringBuilder();
 
             try
@@ -208,7 +208,7 @@ namespace ocr_worker
             var psi = new ProcessStartInfo
             {
                 FileName = "tesseract",
-                Arguments = $"{tempPngFile} stdout -l eng",
+                Arguments = $"{tempPngFile} stdout -l eng", // Ensure the language is set to English
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -229,6 +229,7 @@ namespace ocr_worker
 
             return stringBuilder.ToString();
         }
+
 
         // Helper method to delete temporary files
         private void DeleteTempFile(string tempPngFile)

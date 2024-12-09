@@ -11,6 +11,9 @@ using DocumentManagementSystem.Exceptions.Messaging;
 using dms_api.DTOs;
 using Minio;
 using Minio.DataModel.Args;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Mapping;
+
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -24,8 +27,9 @@ namespace DocumentManagementSystem.Controllers
         private readonly IMessageQueueService _messageQueueService;
         private readonly IConnection _connection; // RabbitMQ connection
         private readonly IModel _channel; // RabbitMQ channel
-        private readonly IMinioClient _minioClient;
+        private readonly IMinioClient _minioClient; // Minio
         private const string BucketName = "files";
+        private readonly ElasticsearchClient _elasticClient; // ElasticSearch
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentController"/> class.
@@ -34,17 +38,19 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
         /// /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService)
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, ElasticsearchClient elasticClient)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
+            _elasticClient = elasticClient;
             _minioClient = new MinioClient()
                 .WithEndpoint("minio", 9000)
                 .WithCredentials("minioadmin", "minioadmin")
                 .WithSSL(false)
                 .Build();
+            Task.Run(async () => await EnsureIndexExists()); //check if index exists
         }
 
         /// <summary>
@@ -101,6 +107,24 @@ namespace DocumentManagementSystem.Controllers
                 return StatusCode(500, "An internal server error occurred.");
             }
         }
+
+        //// Create Index for ElasticSearch ctrl+U to uncomment !!
+        private async Task EnsureIndexExists()
+        {
+            var indexName = "documents";
+
+            //Check if index exists
+            _logger.LogInformation("Checking if index exists...");
+            var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
+
+            if (!indexExistsResponse.Exists)
+            {
+                // if index doesnt exist: create
+                _logger.LogWarning($"Creating new index {indexName}");
+                await _elasticClient.Indices.CreateAsync(indexName);
+            }
+        }
+
 
         /// <summary>
         /// Creates a new document.
@@ -254,8 +278,21 @@ namespace DocumentManagementSystem.Controllers
 
                 if (response.Success)
                 {
-                    _logger.LogInformation("Successfully added ocr text to document " + id);
-                    return NoContent(); // Return 204 No Content
+                    _logger.LogInformation("Successfully added OCR text to document {DocumentId}.", id);
+
+                    // index in elasticsearch when ocrtext is ready
+                    var indexResponse = await _elasticClient.IndexAsync(document, i => i.Index("documents"));
+
+                    if (indexResponse.IsValidResponse)
+                    {
+                        _logger.LogInformation("Document with ID {DocumentId} successfully indexed in Elasticsearch.", id);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to index document with ID {DocumentId}: {DebugInfo}", id, indexResponse.DebugInformation);
+                    }
+
+                    return NoContent();
                 }
 
                 _logger.LogWarning("Ocr update was not possible: " + response.Message);
@@ -297,8 +334,91 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
-        ///
+        /// <summary>
+        /// Searches documents by query string.
+        /// </summary>
+        /// <param name="searchTerm">The term to search for.</param>
+        /// <returns>A list of matching documents.</returns>
+        [HttpPost("search/{searchTerm}")]
+        public async Task<IActionResult> SearchByQueryString(string searchTerm)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    _logger.LogWarning("Search term is empty.");
+                    return BadRequest(new { message = "Search term cannot be empty" });
+                }
 
+                var response = await _elasticClient.SearchAsync<Document>(s => s
+                    .Index("documents")
+                    .Query(q => q.QueryString(qs => qs.Query($"*{searchTerm}*"))));
+
+                if (!response.IsValidResponse)
+                {
+                    _logger.LogError("Elasticsearch error: {DebugInfo}", response.DebugInformation);
+                    return StatusCode(500, new { message = "Elasticsearch error", details = response.DebugInformation });
+                }
+
+                if (!response.Documents.Any())
+                {
+                    _logger.LogInformation("No documents found for search term: {SearchTerm}", searchTerm);
+                    return NotFound(new { message = "No documents found matching the search term." });
+                }
+
+                _logger.LogInformation("Search successful for term: {SearchTerm}", searchTerm);
+                return Ok(response.Documents);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Unhandled exception in SearchByQueryString: {Exception}", ex);
+                return StatusCode(500, new { message = "Internal Server Error", details = ex.Message });
+            }
+        }
+
+        // For test purposes
+        [HttpGet("search/querystring")]
+        public async Task<IActionResult> SearchByQueryStringGet(string searchTerm)
+        {
+            return await SearchByQueryString(searchTerm);
+        }
+
+        /// <summary>
+        /// Searches documents by fuzzy search.
+        /// </summary>
+        /// <param name="searchTerm">The term to search for.</param>
+        /// <returns>A list of matching documents.</returns>
+        [HttpPost("search/fuzzy")]
+        public async Task<IActionResult> SearchByFuzzy([FromBody] string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return BadRequest(new { message = "Search term cannot be empty" });
+            }
+
+            var response = await _elasticClient.SearchAsync<Document>(s => s
+                .Index("documents")
+                .Query(q => q.Match(m => m
+                .Field("OcrText")
+                .Query(searchTerm)
+                .Fuzziness(new Fuzziness(4)))));
+
+            return HandleSearchResponse(response);
+        }
+
+        private IActionResult HandleSearchResponse(SearchResponse<Document> response)
+        {
+            if (response.IsValidResponse)
+            {
+                if (response.Documents.Any())
+                {
+                    return Ok(response.Documents);
+                }
+                return NotFound(new { message = "No documents found matching the search term." });
+            }
+
+            return StatusCode(500, new { message = "Failed to search documents", details = response.DebugInformation });
+        }
 
         private void SendToMessageQueue(string fileName)
         {
