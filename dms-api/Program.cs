@@ -5,13 +5,23 @@ using FluentValidation.AspNetCore;
 using dms_dal_new.Data;
 using dms_bl.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using dms_dal_new.Repositories;
 using Npgsql;
 using dms_bl.Validators;
-using Elastic.Clients.Elasticsearch;
 using DocumentManagementSystem.Controllers;
+using Serilog;
 
+//Serilog logging
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
+
+Log.Information("Starting web application");
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -30,9 +40,9 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everyt
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
 //ElasticSearch
-builder.Services.AddScoped<IElasticSearchClientAgent, ElasticSearchClientAgent>();
+//builder.Services.AddScoped<IElasticSearchClientAgent, ElasticSearchClientAgent>();
 //Dummy ElasticSearch
-//builder.Services.AddScoped<IElasticSearchClientAgent, DummyElasticSearchClient>();
+builder.Services.AddScoped<IElasticSearchClientAgent, DummyElasticSearchClient>();
 
 
 
@@ -69,6 +79,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+app.UseSerilogRequestLogging();
 
 // Use Migrations and Database Creation
 using (var scope = app.Services.CreateScope())

@@ -66,7 +66,8 @@ namespace DocumentManagementSystem.Controllers
 
         public Task<MyIndexResponse> IndexAsync(Document document, string v)
         {
-            return Task.FromResult(new MyIndexResponse() { IsValidResponse = true });
+            return Task.FromResult(new MyIndexResponse() { IsValidResponse = true, 
+                DebugInformation = $"{v} was indexed successfully" });
         }
 
         public Task<SearchResponse<T>> SearchAsync<T>(Action<SearchRequestDescriptor<T>> request)
