@@ -9,6 +9,7 @@ using dms_dal_new.Repositories;
 using Npgsql;
 using dms_bl.Validators;
 using Elastic.Clients.Elasticsearch;
+using DocumentManagementSystem.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,10 +30,10 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everyt
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
 //ElasticSearch
-var elasticUri = builder.Configuration.GetConnectionString("ElasticSearch") ?? "http://elasticsearch:9200";
-var settings = new ElasticsearchClientSettings(new Uri(elasticUri)).EnableDebugMode();
-var elasticClient = new ElasticsearchClient(settings);
-builder.Services.AddSingleton(elasticClient);
+builder.Services.AddScoped<IElasticSearchClientAgent, ElasticSearchClientAgent>();
+//Dummy ElasticSearch
+//builder.Services.AddScoped<IElasticSearchClientAgent, DummyElasticSearchClient>();
+
 
 
 // CORS Configuration

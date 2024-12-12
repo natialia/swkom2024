@@ -29,7 +29,7 @@ namespace DocumentManagementSystem.Controllers
         private readonly IModel _channel; // RabbitMQ channel
         private readonly IMinioClient _minioClient; // Minio
         private const string BucketName = "files";
-        private readonly ElasticsearchClient _elasticClient; // ElasticSearch
+        private readonly IElasticSearchClientAgent _elasticSearchClientAgent; // ElasticSearch
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentController"/> class.
@@ -38,19 +38,19 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
         /// /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, ElasticsearchClient elasticClient)
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, IElasticSearchClientAgent elasticSearchClientFactory)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
-            _elasticClient = elasticClient;
+            _elasticSearchClientAgent = elasticSearchClientFactory;
             _minioClient = new MinioClient()
                 .WithEndpoint("minio", 9000)
                 .WithCredentials("minioadmin", "minioadmin")
                 .WithSSL(false)
-                .Build();
-            Task.Run(async () => await EnsureIndexExists()); //check if index exists
+                .Build(); //TODO: dependency injection!!!!
+            Task.Run(async () => await _elasticSearchClientAgent.EnsureIndexExists()); //check if index exists
         }
 
         /// <summary>
@@ -109,21 +109,7 @@ namespace DocumentManagementSystem.Controllers
         }
 
         //// Create Index for ElasticSearch ctrl+U to uncomment !!
-        private async Task EnsureIndexExists()
-        {
-            var indexName = "documents";
-
-            //Check if index exists
-            _logger.LogInformation("Checking if index exists...");
-            var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
-
-            if (!indexExistsResponse.Exists)
-            {
-                // if index doesnt exist: create
-                _logger.LogWarning($"Creating new index {indexName}");
-                await _elasticClient.Indices.CreateAsync(indexName);
-            }
-        }
+        
 
 
         /// <summary>
@@ -281,7 +267,7 @@ namespace DocumentManagementSystem.Controllers
                     _logger.LogInformation("Successfully added OCR text to document {DocumentId}.", id);
 
                     // index in elasticsearch when ocrtext is ready
-                    var indexResponse = await _elasticClient.IndexAsync(document, i => i.Index("documents"));
+                    var indexResponse = await _elasticSearchClientAgent.IndexAsync(document, "documents");
 
                     if (indexResponse.IsValidResponse)
                     {
@@ -350,7 +336,7 @@ namespace DocumentManagementSystem.Controllers
                     return BadRequest(new { message = "Search term cannot be empty" });
                 }
 
-                var response = await _elasticClient.SearchAsync<Document>(s => s
+                var response = await _elasticSearchClientAgent.SearchAsync<Document>(s => s
                     .Index("documents")
                     .Query(q => q.QueryString(qs => qs.Query($"*{searchTerm}*"))));
 
@@ -396,7 +382,7 @@ namespace DocumentManagementSystem.Controllers
                 return BadRequest(new { message = "Search term cannot be empty" });
             }
 
-            var response = await _elasticClient.SearchAsync<Document>(s => s
+            var response = await _elasticSearchClientAgent.SearchAsync<Document>(s => s
                 .Index("documents")
                 .Query(q => q.Match(m => m
                 .Field("OcrText")
