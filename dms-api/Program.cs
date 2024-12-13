@@ -40,9 +40,9 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everyt
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 
 //ElasticSearch
-//builder.Services.AddScoped<IElasticSearchClientAgent, ElasticSearchClientAgent>();
+builder.Services.AddScoped<IElasticSearchClientAgent, ElasticSearchClientAgent>();
 //Dummy ElasticSearch
-builder.Services.AddScoped<IElasticSearchClientAgent, DummyElasticSearchClient>();
+//builder.Services.AddScoped<IElasticSearchClientAgent, DummyElasticSearchClient>();
 
 
 

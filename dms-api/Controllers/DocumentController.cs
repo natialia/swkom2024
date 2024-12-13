@@ -19,14 +19,12 @@ namespace DocumentManagementSystem.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DocumentController : ControllerBase, IDisposable
+    public class DocumentController : ControllerBase
     {
         private readonly IMapper _mapper; // For mapping DTOs to entities
         private readonly ILogger<DocumentController> _logger; // For logging
         private readonly IDocumentLogic _documentService; // Service for document operations
         private readonly IMessageQueueService _messageQueueService;
-        private readonly IConnection _connection; // RabbitMQ connection
-        private readonly IModel _channel; // RabbitMQ channel
         private readonly IMinioClient _minioClient; // Minio
         private const string BucketName = "files";
         private readonly IElasticSearchClientAgent _elasticSearchClientAgent; // ElasticSearch
@@ -37,14 +35,15 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="mapper">Mapper for converting between DTOs and entities.</param>
         /// <param name="logger">Logger for recording actions and errors.</param>
         /// <param name="documentService">Service for document operations.</param>
-        /// /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, IElasticSearchClientAgent elasticSearchClientFactory)
+        /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
+        /// <param name="elasticSearchClientAgent">Service for indexing files in Elastic Search.</param>
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, IElasticSearchClientAgent elasticSearchClientAgent)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
-            _elasticSearchClientAgent = elasticSearchClientFactory;
+            _elasticSearchClientAgent = elasticSearchClientAgent;
             _minioClient = new MinioClient()
                 .WithEndpoint("minio", 9000)
                 .WithCredentials("minioadmin", "minioadmin")
@@ -227,6 +226,11 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Get the text string of a document.
+        /// </summary>
+        /// <param name="id">The ID of the document get the text of.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         [HttpGet("ocrText/{id}")]
         public async Task<IActionResult> GetTextOfDocument(int id)
         {
@@ -243,6 +247,12 @@ namespace DocumentManagementSystem.Controllers
             return StatusCode(400);
         }
 
+        /// <summary>
+        /// Update a document to add OCR text and index in elastic search..
+        /// </summary>
+        /// <param name="id">The ID of the document to update.</param>
+        /// <param name="document">The updated document data.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         [HttpPut("ocrText/{id}")]
         public async Task<IActionResult> PutDocumentWithText(int id, Document document)
         {
@@ -362,7 +372,11 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
-        // For test purposes
+        /// <summary>
+        /// Test a search query.
+        /// </summary>
+        /// <param name="searchTerm">The search term to look for.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         [HttpGet("search/querystring")]
         public async Task<IActionResult> SearchByQueryStringGet(string searchTerm)
         {
@@ -404,34 +418,6 @@ namespace DocumentManagementSystem.Controllers
             }
 
             return StatusCode(500, new { message = "Failed to search documents", details = response.DebugInformation });
-        }
-
-        private void SendToMessageQueue(string fileName)
-        {
-            //TODO: move to business layer
-            // Message Queue Logging
-            try
-            {
-                _logger.LogInformation("Sending document {FileName} to RabbitMQ queue...", fileName);
-                var body = Encoding.UTF8.GetBytes(fileName); // Convert file name to byte array
-                _channel.BasicPublish(exchange: "", routingKey: "document_queue", basicProperties: null, body: body); // Publish message
-                _logger.LogInformation("Document {FileName} successfully sent to queue.", fileName);
-            }
-            catch (Exception ex)
-            {
-                // Log errors encountered while sending to RabbitMQ
-                _logger.LogError("Error sending document {FileName} to RabbitMQ queue: {Exception}", fileName, ex);
-                throw new QueueException("Error sending message to RabbitMQ.", ex);
-            }
-        }
-
-        public void Dispose()
-        {
-            // Dispose Logging
-            _logger.LogInformation("Disposing RabbitMQ resources...");
-            _channel?.Close(); // Close the channel
-            _connection?.Close(); // Close the connection
-            _logger.LogInformation("RabbitMQ resources disposed."); // Log disposal completion
         }
     }
 }
