@@ -8,6 +8,7 @@ namespace DocumentManagementSystem.Controllers
         Task<MyIndexResponse> IndexAsync(Document document, string v);
         Task EnsureIndexExists();
         Task<SearchResponse<T>> SearchAsync<T>(Action<SearchRequestDescriptor<T>> request);
+        Task<MyIndexResponse> DeleteAsync(Document document, string indexName);
     }
 
     public class ElasticSearchClientAgent: IElasticSearchClientAgent
@@ -39,9 +40,20 @@ namespace DocumentManagementSystem.Controllers
             }
         }
 
+        public async Task<MyIndexResponse> DeleteAsync(Document document, string indexName)
+        {
+            var response = await _elasticClient.DeleteAsync<Document>(document.Id.ToString(), d => d.Index(indexName));
+            MyIndexResponse indexResponse = new MyIndexResponse()
+            {
+                IsValidResponse = response.IsValidResponse,
+                DebugInformation = response.DebugInformation
+            };
+            return indexResponse;
+        }
+
         public async Task<MyIndexResponse> IndexAsync(Document document, string indexName)
         {
-            var response = await _elasticClient.IndexAsync(document, i => i.Index(indexName));
+            var response = await _elasticClient.IndexAsync(document, i => i.Index(indexName).Id(document.Id.ToString()));
             MyIndexResponse indexResponse = new MyIndexResponse()
             {
                 IsValidResponse = response.IsValidResponse,
@@ -58,7 +70,15 @@ namespace DocumentManagementSystem.Controllers
 
     public class DummyElasticSearchClient : IElasticSearchClientAgent
     {
-        
+        public Task<MyIndexResponse> DeleteAsync(Document document, string indexName)
+        {
+            return Task.FromResult(new MyIndexResponse()
+            {
+                IsValidResponse = true,
+                DebugInformation = $"{document.Name} was deleted successfully"
+            });
+        }
+
         public Task EnsureIndexExists()
         {
             return Task.CompletedTask;
