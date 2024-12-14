@@ -120,7 +120,7 @@ services:
     ports:
       - "9200:9200"
     volumes:
-      - elasticsearch-data:/data
+      - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
       - elastic
 
