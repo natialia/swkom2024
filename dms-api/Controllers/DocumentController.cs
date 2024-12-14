@@ -161,12 +161,6 @@ namespace DocumentManagementSystem.Controllers
                 _logger.LogWarning("Document validation failed");
                 return StatusCode(400); // Return 400 Bad Request
             }
-            catch (RabbitMQClientException ex)
-            {
-                // Log errors related to RabbitMQ client
-                _logger.LogError("Failed to send message to RabbitMQ: {Exception}", ex);
-                return StatusCode(500, "Error connecting to RabbitMQ");
-            }
             catch (Exception ex)
             {
                 // Log other unexpected errors
