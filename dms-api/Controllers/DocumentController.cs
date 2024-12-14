@@ -13,6 +13,7 @@ using Minio;
 using Minio.DataModel.Args;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Mapping;
+using System.IO;
 
 
 namespace DocumentManagementSystem.Controllers
@@ -307,11 +308,28 @@ namespace DocumentManagementSystem.Controllers
             try
             {
                 // Send DELETE request to the service to remove the document
+                var documentToDelete = await _documentService.GetDocumentByIdAsync(id);
                 var response = await _documentService.DeleteAsync(id);
 
                 if (response.Success)
                 {
-                    return NoContent(); // Return 204 No Content
+                    _logger.LogInformation("Deleted document from database.");
+
+                    //Delete from minio
+                    RemoveObjectArgs rmArgs = new RemoveObjectArgs()
+                                  .WithBucket(BucketName)
+                                  .WithObject($"{documentToDelete.Name}.pdf");
+                    await _minioClient.RemoveObjectAsync(rmArgs);
+                    _logger.LogInformation($"Deleted document {documentToDelete.Name} from minio file storage.");
+
+                    //Delete from elasticsearch
+                    var elasticResponse = await _elasticSearchClientAgent.DeleteAsync(documentToDelete, "documents");
+
+                    if (elasticResponse.IsValidResponse)
+                    {
+                        _logger.LogInformation($"Deleted {documentToDelete.Name} from elastic search.");
+                        return NoContent(); // Return 204 No Content
+                    }
                 }
 
                 return StatusCode(400, response.Message); // Return 400 Bad Request
