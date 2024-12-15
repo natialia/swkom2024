@@ -29,7 +29,7 @@ namespace ocr_worker.Workers
             {
                 ConnectToRabbitMQ(); // Ensure the connection and channel are initialized
             }
-            else
+            else  
             {
                 _connection = connection;
                 _channel = channel;

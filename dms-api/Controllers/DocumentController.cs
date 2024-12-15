@@ -133,6 +133,7 @@ namespace DocumentManagementSystem.Controllers
                     _logger.LogWarning("No file uploaded.");
                     return BadRequest("A file needs to be uploaded.");
                 }
+                _logger.LogInformation($"Received: {request.Id}, {request.Name}, {request.FileType}, {request.FileSize}, File: {uploadedDocument.FileName}");
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to Document entity
                 var resultItem = await _documentService.AddDocumentAsync(document); // Add document via service
 
@@ -157,12 +158,6 @@ namespace DocumentManagementSystem.Controllers
                 // Log validation failure
                 _logger.LogWarning("Document validation failed");
                 return StatusCode(400); // Return 400 Bad Request
-            }
-            catch (RabbitMQClientException ex)
-            {
-                // Log errors related to RabbitMQ client
-                _logger.LogError("Failed to send message to RabbitMQ: {Exception}", ex);
-                return StatusCode(500, "Error connecting to RabbitMQ");
             }
             catch (Exception ex)
             {
@@ -332,6 +327,8 @@ namespace DocumentManagementSystem.Controllers
                         _logger.LogInformation($"Deleted {documentToDelete.Name} from elastic search.");
                         return NoContent(); // Return 204 No Content
                     }
+                    _logger.LogWarning($"Could not delete from elastic search - does {documentToDelete.Name} exist yet?");
+                    return NoContent();
                 }
 
                 return StatusCode(400, response.Message); // Return 400 Bad Request

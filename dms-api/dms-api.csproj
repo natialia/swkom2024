@@ -31,5 +31,9 @@
 	<ProjectReference Include="..\dms-dal-new\dms-dal-new.csproj" />
 	<ProjectReference Include="..\web-ui\web-ui.csproj" />
   </ItemGroup>
+	
+  <ItemGroup>
+    <InternalsVisibleTo Include="DocumentManagementSystem.Tests" />
+  </ItemGroup>
 
 </Project>
