@@ -38,18 +38,14 @@ namespace DocumentManagementSystem.Controllers
         /// <param name="documentService">Service for document operations.</param>
         /// <param name="messageQueueService">Service for sending messages to rabbitmq queue.</param>
         /// <param name="elasticSearchClientAgent">Service for indexing files in Elastic Search.</param>
-        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, IElasticSearchClientAgent elasticSearchClientAgent)
+        public DocumentController(IMapper mapper, ILogger<DocumentController> logger, IDocumentLogic documentService, IMessageQueueService messageQueueService, IElasticSearchClientAgent elasticSearchClientAgent, IMinioClient minioClient)
         {
             _mapper = mapper; // Initialize the mapper
             _logger = logger; // Initialize the logger
             _documentService = documentService; // Initialize the document service
             _messageQueueService = messageQueueService; // Initialize message queue service
             _elasticSearchClientAgent = elasticSearchClientAgent;
-            _minioClient = new MinioClient()
-                .WithEndpoint("minio", 9000)
-                .WithCredentials("minioadmin", "minioadmin")
-                .WithSSL(false)
-                .Build(); //TODO: dependency injection!!!!
+            _minioClient = minioClient; //TODO: dependency injection!!!!
             Task.Run(async () => await _elasticSearchClientAgent.EnsureIndexExists()); //check if index exists
         }
 

@@ -13,6 +13,7 @@ using Npgsql;
 using dms_bl.Validators;
 using DocumentManagementSystem.Controllers;
 using Serilog;
+using Minio;
 
 //Serilog logging
 Log.Logger = new LoggerConfiguration()
@@ -38,6 +39,14 @@ builder.Services.AddDbContext<DocumentContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DocumentDatabase")));
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>(); // Everything must be singleton, so that hosted service can register dependency
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
+builder.Services.AddScoped<IMinioClient>(s =>
+{
+    return new MinioClient()
+        .WithEndpoint("minio", 9000)
+        .WithCredentials("minioadmin", "minioadmin")
+        .WithSSL(false)
+        .Build();
+});
 
 //ElasticSearch
 builder.Services.AddScoped<IElasticSearchClientAgent, ElasticSearchClientAgent>();
