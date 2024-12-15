@@ -327,6 +327,8 @@ namespace DocumentManagementSystem.Controllers
                         _logger.LogInformation($"Deleted {documentToDelete.Name} from elastic search.");
                         return NoContent(); // Return 204 No Content
                     }
+                    _logger.LogWarning($"Could not delete from elastic search - does {documentToDelete.Name} exist yet?");
+                    return NoContent();
                 }
 
                 return StatusCode(400, response.Message); // Return 400 Bad Request

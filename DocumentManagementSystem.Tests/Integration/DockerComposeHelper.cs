@@ -9,14 +9,14 @@ namespace DocumentManagementSystem.Tests.Integration
 {
     public static class DockerComposeHelper
     {
-        public static async void StartDockerCompose(string filePath)
+        public static async Task StartDockerCompose(string filePath)
         {
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "docker-compose",
-                    Arguments = $"-f {filePath} up -d --build",
+                    Arguments = $"-f {filePath} up -d --build", //background start -d
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -25,31 +25,51 @@ namespace DocumentManagementSystem.Tests.Integration
             };
 
             process.Start();
-            Thread.Sleep(10000);
-            process.WaitForExit();
+
+            // avoid deadlocks and read seperately (output of process)
+            var standardOutput = process.StandardOutput.ReadToEndAsync();
+            var standardError = process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
 
             if (process.ExitCode != 0)
             {
-                throw new Exception($"Failed to start docker-compose. Error: {process.StandardError.ReadToEnd()}");
+                var errorOutput = await standardError;
+                throw new Exception($"Failed to start docker-compose. Error: {errorOutput}");
             }
+
+            await standardOutput;
         }
 
-        public static void StopDockerCompose(string filePath)
+        public static async Task StopDockerCompose(string filePath)
         {
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "docker-compose",
-                    Arguments = $"-f {filePath} down",
+                    Arguments = $"-f {filePath} down", // Stop container
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }
             };
+
             process.Start();
-            process.WaitForExit();
+
+            var standardOutput = process.StandardOutput.ReadToEndAsync();
+            var standardError = process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                var errorOutput = await standardError;
+                throw new Exception($"Failed to stop docker-compose. Error: {errorOutput}");
+            }
+
+            await standardOutput;
         }
     }
 }
