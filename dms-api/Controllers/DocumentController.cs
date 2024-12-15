@@ -137,6 +137,7 @@ namespace DocumentManagementSystem.Controllers
                     _logger.LogWarning("No file uploaded.");
                     return BadRequest("A file needs to be uploaded.");
                 }
+                _logger.LogInformation($"Received: {request.Id}, {request.Name}, {request.FileType}, {request.FileSize}, File: {uploadedDocument.FileName}");
                 var document = _mapper.Map<Document>(documentDto); // Map DTO to Document entity
                 var resultItem = await _documentService.AddDocumentAsync(document); // Add document via service
 

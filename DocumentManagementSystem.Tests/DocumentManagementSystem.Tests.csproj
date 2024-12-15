@@ -33,6 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Integration\Vocabulary.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\Test.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

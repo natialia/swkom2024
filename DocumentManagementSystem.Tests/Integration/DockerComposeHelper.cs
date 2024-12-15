@@ -9,7 +9,7 @@ namespace DocumentManagementSystem.Tests.Integration
 {
     public static class DockerComposeHelper
     {
-        public static void StartDockerCompose(string filePath)
+        public static async void StartDockerCompose(string filePath)
         {
             var process = new Process
             {
@@ -25,6 +25,7 @@ namespace DocumentManagementSystem.Tests.Integration
             };
 
             process.Start();
+            Thread.Sleep(10000);
             process.WaitForExit();
 
             if (process.ExitCode != 0)
