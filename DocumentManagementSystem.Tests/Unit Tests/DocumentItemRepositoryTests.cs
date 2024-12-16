@@ -100,4 +100,29 @@ public class DocumentItemRepositoryTests
         Assert.NotNull(updatedItem); // Assert that the updated item is not null
         Assert.Equal("Updated Name", updatedItem.Name); // Assert that the Name property has been updated
     }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnAllDocumentItems()
+    {
+        // Arrange: Add multiple items
+        var documentItems = new List<DocumentItem>
+    {
+        new DocumentItem { Name = "Item 1" },
+        new DocumentItem { Name = "Item 2" },
+        new DocumentItem { Name = "Item 3" }
+    };
+
+        foreach (var item in documentItems)
+        {
+            await _repository.AddAsync(item);
+        }
+
+        // Act: Retrieve all items
+        var allItems = await _repository.GetAllAsync();
+
+        // Assert: Check the count and correct retrieval
+        Assert.Contains(allItems, d => d.Name == "Item 1");
+        Assert.Contains(allItems, d => d.Name == "Item 2");
+        Assert.Contains(allItems, d => d.Name == "Item 3");
+    }
 }
