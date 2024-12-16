@@ -1,21 +1,33 @@
-var builder = WebApplication.CreateBuilder(args);
+using System.Diagnostics.CodeAnalysis;
 
-builder.Configuration //because appsettings was renamed
-    .SetBasePath(Directory.GetCurrentDirectory()) 
-    .AddJsonFile("web-appsettings.json", optional: false, reloadOnChange: true)
-    .AddEnvironmentVariables();
+namespace web_ui
+{
+    [ExcludeFromCodeCoverage]
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
-// Füge statische Dateien hinzu
-builder.Services.AddControllersWithViews();
+            builder.Configuration //because appsettings was renamed
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("web-appsettings.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables();
 
-var app = builder.Build();
+            // Füge statische Dateien hinzu
+            builder.Services.AddControllersWithViews();
 
-// Aktiviere die Verwendung von statischen Dateien
-app.UseStaticFiles();
+            var app = builder.Build();
 
-// Aktiviere den Routing-Support
-app.UseRouting();
+            // Aktiviere die Verwendung von statischen Dateien
+            app.UseStaticFiles();
 
-app.MapGet("/", () => Results.Redirect("/index.html")); // Weiterleitung auf die Hauptseite
+            // Aktiviere den Routing-Support
+            app.UseRouting();
 
-app.Run();
+            app.MapGet("/", () => Results.Redirect("/index.html")); // Weiterleitung auf die Hauptseite
+
+            app.Run();
+        }
+    }
+}
