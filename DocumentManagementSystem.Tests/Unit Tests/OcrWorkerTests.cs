@@ -26,7 +26,8 @@ public class OcrWorkerTests
         // Verify the test file exists
         Assert.True(File.Exists(filePath), $"Test file is missing: {filePath}");
 
-        using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var fileStream = new FileStream(  filePath, FileMode.Open, FileAccess.Read);
+        Assert.True(fileStream.Length > 0, "Filestream could not read file");
         var ocrWorker = new OcrWorker(mockConnection.Object, mockChannel.Object);
 
         // Act: Perform OCR on the test file
