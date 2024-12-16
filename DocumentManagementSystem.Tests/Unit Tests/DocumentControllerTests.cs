@@ -1,14 +1,21 @@
-﻿using AutoMapper;
-using dms_bl.Services;
-using DocumentManagementSystem.Controllers;
-using DocumentManagementSystem.DTOs;
+﻿using Moq;
+using Xunit;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Moq;
+using DocumentManagementSystem.Controllers;
+using dms_bl.Services;
 using dms_bl.Models;
 using dms_api.DTOs;
+using Microsoft.Extensions.Logging;
+using AutoMapper;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
+using DocumentManagementSystem.DTOs;
+using dms_dal_new.Entities;
 using Microsoft.AspNetCore.Http;
-using Azure;
+using System.Text;
+using Elastic.Clients.Elasticsearch;
+
 public class DocumentControllerTests
 {
     private readonly Mock<IDocumentLogic> _mockDocumentService;
@@ -46,7 +53,7 @@ public class DocumentControllerTests
     public async Task GetAllDocuments_ShouldReturnServerError_WhenExceptionOccurs()
     {
         // Arrange
-        _mockDocumentService.Setup(service => service.GetAllDocumentsAsync()).ThrowsAsync(new Exception("Some error"));
+        _mockDocumentService.Setup(service => service.GetAllDocumentsAsync()).ThrowsAsync(new System.Exception("Some error"));
 
         // Act
         var result = await _controller.GetAllDocuments();
@@ -106,4 +113,61 @@ public class DocumentControllerTests
         // Assert
         Assert.IsType<BadRequestObjectResult>(result);
     }
+
+    [Fact]
+    public async Task PutDocument_ShouldReturnNoContent_WhenDocumentIsUpdated()
+    {
+        // Arrange
+        var documentDto = new DocumentDTO { Id = 1, Name = "Updated Document" };
+        var document = new Document { Id = 1, Name = "Updated Document" };
+        var serviceResponse = new ServiceResponse { Success = true, Message = "Successfully updated document" };
+
+        _mockMapper.Setup(m => m.Map<Document>(documentDto)).Returns(document);
+        _mockDocumentService.Setup(service => service.UpdateDocumentAsync(1, document)).ReturnsAsync(serviceResponse);
+
+        // Act
+        var result = await _controller.PutDocument(1, documentDto);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task DeleteDocument_ShouldReturnNotFound_WhenDocumentDoesNotExist()
+    {
+        // Arrange
+        _mockDocumentService.Setup(service => service.DeleteAsync(1)).ReturnsAsync(new ServiceResponse { Success = false, Message = "Could not delete: does not exist" });
+
+        // Act
+        var result = await _controller.DeleteDocument(1);
+
+        // Assert
+        var badRequestResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(400, badRequestResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task SearchByQueryString_ShouldReturnBadRequest_WhenSearchTermIsEmpty()
+    {
+        // Act
+        var result = await _controller.SearchByQueryString("");
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task PutDocument_ShouldReturnBadRequest_WhenIdsDoNotMatch()
+    {
+        // Arrange
+        var documentDto = new DocumentDTO { Id = 2, Name = "Updated Document" };
+
+        // Act
+        var result = await _controller.PutDocument(1, documentDto);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("ID mismatch", badRequestResult.Value);
+    }
+
 }

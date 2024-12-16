@@ -14,12 +14,14 @@ using Minio.DataModel.Args;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Mapping;
 using System.IO;
+using System.Diagnostics.CodeAnalysis;
 
 
 namespace DocumentManagementSystem.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    //[ExcludeFromCodeCoverage]
     public class DocumentController : ControllerBase
     {
         private readonly IMapper _mapper; // For mapping DTOs to entities

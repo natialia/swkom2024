@@ -65,4 +65,18 @@ public class DocumentValidatorTests
         // Assert: Verify that a validation error occurs for FileSize
         result.ShouldHaveValidationErrorFor(x => x.FileSize);
     }
+
+    [Fact]
+    public void Should_Have_Error_When_FileSize_Has_Invalid_Suffix()
+    {
+        // Arrange: Prepare a Document with FileSize having an invalid suffix (e.g., "1000MB")
+        var document = new Document { FileSize = "1000MB" };
+
+        // Act: Validate the document
+        var result = _validator.TestValidate(document);
+
+        // Assert: Verify that a validation error occurs for FileSize due to the invalid suffix
+        result.ShouldHaveValidationErrorFor(x => x.FileSize);
+    }
+
 }

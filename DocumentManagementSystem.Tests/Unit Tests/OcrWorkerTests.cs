@@ -4,6 +4,12 @@ using Moq;
 using RabbitMQ.Client;
 using System;
 using ocr_worker;
+using RabbitMQ.Client.Events;
+using Minio.DataModel.Args;
+using Minio;
+using System.Text;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 public class OcrWorkerTests
 {
@@ -120,5 +126,67 @@ public class OcrWorkerTests
         var result = ocrWorker.PerformOcr(mockStream.Object);
         Assert.NotNull(result);
         Assert.Equal(string.Empty, result);
+    }
+    
+    [Fact]
+    public void Dispose_Should_Close_Connection_And_Channel()
+    {
+        // Arrange: Mock RabbitMQ components
+        var mockConnection = new Mock<IConnection>();
+        var mockChannel = new Mock<IModel>();
+        var ocrWorker = new OcrWorker(mockConnection.Object, mockChannel.Object);
+
+        // Act: Dispose the worker
+        ocrWorker.Dispose();
+
+        // Assert: Ensure that both connection and channel are closed
+        mockConnection.Verify(c => c.Close(), Times.Once);
+        mockChannel.Verify(c => c.Close(), Times.Once);
+    }
+
+    [Fact]
+    public void PerformOcr_Should_Handle_Empty_Input_Stream()
+    {
+        // Arrange
+        var mockConnection = new Mock<IConnection>();
+        var mockChannel = new Mock<IModel>();
+        using var emptyStream = new MemoryStream();  // Empty file
+
+        var ocrWorker = new OcrWorker(mockConnection.Object, mockChannel.Object);
+
+        // Act
+        var result = ocrWorker.PerformOcr(emptyStream);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(string.Empty, result);  // Should return an empty string
+    }
+
+    [Fact]
+    public void PerformOcr_Should_Return_Text_For_Simulated_Image()
+    {
+        // Arrange
+        var mockConnection = new Mock<IConnection>();
+        var mockChannel = new Mock<IModel>();
+
+        // Create a simulated image with text for OCR
+        using var image = new Bitmap(200, 100);
+        using var graphics = Graphics.FromImage(image);
+        graphics.Clear(Color.White);
+        graphics.DrawString("Sample Text", new Font("Arial", 20), Brushes.Black, new PointF(10, 40));
+
+        // Save the image to a memory stream
+        using var memoryStream = new MemoryStream();
+        image.Save(memoryStream, ImageFormat.Png);
+        memoryStream.Seek(0, SeekOrigin.Begin);  // Reset stream position
+
+        var ocrWorker = new OcrWorker(mockConnection.Object, mockChannel.Object);
+
+        // Act
+        var result = ocrWorker.PerformOcr(memoryStream);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Contains("Sample Text", result, StringComparison.OrdinalIgnoreCase);
     }
 }

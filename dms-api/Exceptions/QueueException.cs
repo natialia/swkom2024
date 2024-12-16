@@ -1,5 +1,8 @@
-﻿namespace DocumentManagementSystem.Exceptions.Messaging
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace DocumentManagementSystem.Exceptions.Messaging
 {
+    [ExcludeFromCodeCoverage]
     public class QueueException : Exception
     {
         public QueueException() { }

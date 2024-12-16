@@ -1,0 +1,6 @@
+{
+  "exclude": [
+    "[DocumentManagementSystem.Program]",
+    "[dms_bl.Exceptions.*]"
+  ]
+}

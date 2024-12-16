@@ -1,5 +1,6 @@
 ﻿using dms_bl.Models;
 using Elastic.Clients.Elasticsearch;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DocumentManagementSystem.Controllers
 {
@@ -10,7 +11,7 @@ namespace DocumentManagementSystem.Controllers
         Task<SearchResponse<T>> SearchAsync<T>(Action<SearchRequestDescriptor<T>> request);
         Task<MyIndexResponse> DeleteAsync(Document document, string indexName);
     }
-
+    [ExcludeFromCodeCoverage]
     public class ElasticSearchClientAgent: IElasticSearchClientAgent
     {
         private readonly ElasticsearchClient _elasticClient;
@@ -67,7 +68,7 @@ namespace DocumentManagementSystem.Controllers
             return await _elasticClient.SearchAsync(request);
         }
     }
-
+    [ExcludeFromCodeCoverage]
     public class DummyElasticSearchClient : IElasticSearchClientAgent
     {
         public Task<MyIndexResponse> DeleteAsync(Document document, string indexName)

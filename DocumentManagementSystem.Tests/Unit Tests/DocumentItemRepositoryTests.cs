@@ -125,4 +125,29 @@ public class DocumentItemRepositoryTests
         Assert.Contains(allItems, d => d.Name == "Item 2");
         Assert.Contains(allItems, d => d.Name == "Item 3");
     }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldNotThrow_WhenDocumentItemDoesNotExist()
+    {
+        // Arrange
+        var nonExistentId = 999;
+
+        // Act
+        var exception = await Record.ExceptionAsync(() => _repository.DeleteAsync(nonExistentId));
+
+        // Assert
+        Assert.Null(exception); // Verify that no exception was thrown
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnEmpty_WhenNoItemsExist()
+    {
+        // Act
+        var allItems = await _repository.GetAllAsync();
+
+        // Assert
+        Assert.NotNull(allItems); // Ensure the result is not null
+        Assert.Empty(allItems);   // Verify that the result is empty
+    }
+
 }
